@@ -1,3 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* fix alpinejs elements being visible on load */
+[x-cloak] { display: none !important; }
+
+* {
+    /* scrollbar - might differ across browsers */
+    scrollbar-color: theme(colors.rose.300) theme(colors.stone.900);
+    scrollbar-width: thin;
+    @apply scroll-smooth;
+
+    /* cursor - unify across operating systems */
+    @apply cursor-default;
+}
+
+.sortable-ghost { opacity: .3 !important; }
