@@ -1,8 +1,8 @@
-<div class="bg-stone-800 border-b border-stone-700" x-data="navbar()">
+<div class="bg-white border-b border-zinc-200" x-data="navbar()">
     <nav class="container mx-auto">
 
         <!-- menu bar with urls (or mobile drop down button) -->
-        <div class="w-full h-16 flex items-center justify-between relative" :class="is_open ? 'border-b border-stone-700' : ''" style="visibility: hidden;" x-ref="menu_bar">
+        <div class="w-full h-16 flex items-center justify-between relative tracking-wide" :class="is_open ? 'border-b border-zinc-200' : ''" style="visibility: hidden;" x-ref="menu_bar">
 
             <!-- urls -->
             <div class="flex overflow-hidden relative" x-ref="menu_urls_row">
@@ -15,7 +15,7 @@
 
             <!-- mobile drop down button -->
             <div class="flex overflow-hidden relative" x-ref="menu_column_button">
-                <a @click="toggle_menu" class="text-stone-300 text-nowrap text-sm font-medium transition-transform hover:scale-105 px-3 py-2">Menu</a>
+                <a @click="toggle_menu" class="text-zinc-900 text-nowrap text-sm font-medium transition-transform hover:scale-105 px-3 py-2">Menu</a>
             </div>
 
         </div>
@@ -37,9 +37,9 @@
                 is_open: false,
                 is_overflowing: false,
                 links: [
-                    { id: 1, href: '/', text: 'Reservations', color: 'text-stone-300', },
-                    { id: 2, href: '/about', text: 'Information', color: 'text-stone-300', },
-                    { id: 3, href: '/employees', text: 'Employees', color: 'text-stone-300', },
+                    { id: 1, href: '/', text: 'Reservations', color: 'text-zinc-900', },
+                    { id: 2, href: '/about', text: 'Information', color: 'text-zinc-900', },
+                    { id: 3, href: '/employees', text: 'Employees', color: 'text-zinc-900', },
                 ],
                 toggle_menu() {
                     this.is_open = !this.is_open;

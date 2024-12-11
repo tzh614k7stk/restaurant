@@ -17,6 +17,10 @@
         "vite": "^6.0"
     },
     "dependencies": {
-        "@alpinejs/sort": "^3.14.7"
+        "@alpinejs/sort": "^3.14.7",
+        "@fontsource/montserrat": "^5.1.0",
+        "@fontsource/open-sans": "^5.1.0",
+        "@fontsource/poppins": "^5.1.0",
+        "@fontsource/roboto": "^5.1.0"
     }
 }
