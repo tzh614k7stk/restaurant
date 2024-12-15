@@ -5,10 +5,10 @@
         <div class="w-full h-16 flex items-center justify-between relative tracking-wide" :class="is_open ? 'border-b border-zinc-200' : ''" style="visibility: hidden;" x-ref="menu_bar">
 
             <!-- urls -->
-            <div class="flex overflow-hidden relative" x-ref="menu_urls_row">
+            <div class="flex overflow-hidden relative justify-center" x-ref="menu_urls_row">
                 <div class="flex items-center gap-4">
                     <template x-for="link in links" :key="link.id">
-                        <a :href="link.href" :class="link.color" class="text-nowrap text-sm font-medium transition-transform hover:scale-105 px-3 py-2" x-text="link.text"></a>
+                        <a :href="link.href" :class="link.color" class="text-nowrap text-md font-medium transition-transform hover:scale-105 px-3 py-2" x-text="link.text"></a>
                     </template>
                 </div>
             </div>
@@ -47,6 +47,7 @@
                 check_overflow() {
                     const menu_bar = this.$refs.menu_bar;
                     const menu_urls_row = this.$refs.menu_urls_row;
+                    const menu_urls_container = menu_urls_row.firstElementChild;
                     const menu_column_button = this.$refs.menu_column_button;
 
                     //reset to default
@@ -59,7 +60,7 @@
                     void menu_bar.offsetWidth;
 
                     //check overflow
-                    this.is_overflowing = menu_urls_row.scrollWidth > menu_bar.clientWidth;
+                    this.is_overflowing = menu_urls_container.getBoundingClientRect().width > menu_bar.clientWidth;
 
                     if (!this.is_overflowing)
                     {
