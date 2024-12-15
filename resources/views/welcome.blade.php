@@ -43,12 +43,12 @@
                             <!-- date selection -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Date</label>
-                                <input type="date" :min="min_day" :max="max_day" x-model="selected_date" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <input type="date" :min="min_day" :max="max_day" x-model="selected_date" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
                             </div>
                             <!-- time selection -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Time</label>
-                                <select x-model="selected_time" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <select x-model="selected_time" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
                                     <option value="" disabled>choose time</option>
                                     <template x-for="time in available_times" :key="time">
                                         <option x-text="time" :value="time"></option>
@@ -58,7 +58,7 @@
                             <!-- duration selection -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Duration</label>
-                                <select x-model="duration" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <select x-model="duration" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
                                     <option value="" disabled>choose duration</option>
                                     <template x-for="duration in available_durations" :key="duration">
                                         <option x-text="parse_duration(duration)" :value="duration"></option>
@@ -89,7 +89,7 @@
                                 <div x-cloak x-show="is_form_valid(false) && available_tables.length === 0">
                                     <p class="text-rose-700 text-sm font-bold mb-1">No tables available on this day for the selected time and duration.</p>
                                 </div>
-                                <div x-cloak x-show="closing_dates.includes(selected_date)">
+                                <div x-cloak x-show="closing_dates.includes(selected_date) || closing_dates.includes(new Date(selected_date).toLocaleDateString('en-US', {weekday: 'long'}))">
                                     <p class="text-rose-700 text-sm font-bold mb-1">We are closed on this date.</p>
                                 </div>
                             </div>
@@ -101,8 +101,8 @@
                     <!-- user reservations -->
                     @auth
                     <div x-cloak x-show="user_reservations.length > 0" class="bg-white overflow-hidden shadow-md rounded-lg">
-                        <div class="px-6 py-8">
-                            <div class="flex items-center gap-2 mb-6">
+                        <div class="flex flex-col gap-y-6 px-6 py-8">
+                            <div class="flex items-center gap-2">
                                 <h2 class="text-2xl font-bold tracking-wide">Your Reservations</h2>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
@@ -149,21 +149,47 @@
                                     </div>
                                 </template>
                             </div>
+                            <div class="flex flex-col items-start">
+                                <p class="flex items-center text-lg text-zinc-700 border-b border-zinc-400 mb-2 pr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                    </svg>
+                                    {{ Auth::user()->name }}
+                                </p>
+                                <p class="text-zinc-700 text-sm">
+                                    <i class="text-zinc-500 pr-1">email:</i> {{ Auth::user()->email }}
+                                </p>
+                                <p class="text-zinc-700 text-sm">
+                                    <i class="text-zinc-500 pr-1">member since:</i> {{ Auth::user()->created_at->format('F Y') }}
+                                </p>
+                                <p class="text-zinc-700 text-sm">
+                                    <i class="text-zinc-500 pr-1">number of reservations:</i> 1337
+                                </p>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="flex items-center text-lg text-zinc-700 hover:text-zinc-800 border-t border-zinc-400 mt-2 pr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
+                                        </svg>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     @endauth
                     @guest
-                    <div x-cloak x-show="user_reservations.length > 0" class="bg-white overflow-hidden shadow-md rounded-lg">
+                    <div class="bg-white overflow-hidden shadow-md rounded-lg">
                         <div class="px-6 py-8">
                             <div class="flex justify-center items-center gap-6">
-                                <a href="" class="text-zinc-700 hover:text-zinc-800 text-lg flex items-center gap-1">
+                                <a href="{{ route('login') }}" class="text-zinc-700 hover:text-zinc-800 text-lg flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                                     </svg>
                                     Login
                                 </a>
                                 <span class="text-zinc-700 text-xl">|</span>
-                                <a href="" class="text-zinc-700 hover:text-zinc-800 text-lg flex items-center gap-1">
+                                <a href="{{ route('register') }}" class="text-zinc-700 hover:text-zinc-800 text-lg flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
                                     </svg>
@@ -191,52 +217,43 @@
                     function reservation_system() {
                         return {
                             //server configuration
-                            max_days_in_advance: 30,
-                            opening_hours: {
-                                1: { open: 10, close: 22 }, //monday
-                                2: { open: 10, close: 22 }, //tuesday
-                                3: { open: 10, close: 22 }, //wednesday
-                                4: { open: 10, close: 22 }, //thursday
-                                5: { open: 10, close: 00 }, //friday
-                                6: { open: 11, close: 02 }, //saturday
-                                0: { open: 11, close: 21 }, //sunday
-                            },
-                            custom_opening_hours: {
-                                '2025-01-01': { open: 12, close: 04 },
-                            },
-                            closing_dates: [
-                                '2024-12-24',
-                                '2024-12-31',
-                                '2024-01-01',
-                            ],
-                            tables: [
-                                { id: 1, seats: 2 },
-                                { id: 2, seats: 4 },
-                                { id: 3, seats: 6 },
-                                { id: 4, seats: 8 },
-                                { id: 5, seats: 10 },
-                                { id: 6, seats: 12 },
-                            ],
-                            table_reservations: [
-                                { id: 1, date: '2024-12-15', time: '12:00', duration: 1.5, table_id: 1, seats: 2 },
-                                { id: 2, date: '2024-12-17', time: '18:00', duration: 2, table_id: 4, seats: 4 },
-                                { id: 3, date: '2024-12-18', time: '17:30', duration: 0.5, table_id: 3, seats: 6 },
-                            ],
-                            user_reservations: [1, 2, 3],
+                            max_days_in_advance: null,
+                            durations: [],
+                            opening_hours: {},
+                            custom_opening_hours: {},
+                            closing_dates: [],
+                            tables: [],
+                            table_reservations: [],
+                            user_reservations: [],
                             get_restaurant_data() {
                                 axios.post('/api/restaurant_data').then(response => {
                                     const data = response.data;
-                                    this.max_days_in_advance = data.max_days_in_advance;
-                                    this.opening_hours = data.opening_hours;
-                                    this.custom_opening_hours = data.custom_opening_hours;
-                                    this.closing_dates = data.closing_dates;
-                                    this.tables = data.tables;
-                                    this.table_reservations = data.table_reservations;
-                                    this.user_reservations = data.user_reservations;
+                                    if (data.success)
+                                    {
+                                        this.max_days_in_advance = data.max_days_in_advance;
+                                        this.durations = data.durations;
+                                        this.opening_hours = data.opening_hours;
+                                        this.custom_opening_hours = data.custom_opening_hours;
+                                        this.closing_dates = data.closing_dates;
+                                        this.tables = data.tables;
+                                        this.table_reservations = data.table_reservations;
+                                        this.user_reservations = data.user_reservations;
+                                    }
+                                    else
+                                    {
+                                        this.modal_open(
+                                            'Error',
+                                            'Failed to load restaurant configuration. Please try refreshing the page. Server error.',
+                                            null,
+                                            'OK',
+                                            'Cancel',
+                                            'bg-rose-600 hover:bg-rose-700'
+                                        );
+                                    }
                                 }).catch(error => {
                                     this.modal_open(
                                         'Error',
-                                        'Failed to load restaurant configuration. Please try refreshing the page.',
+                                        'Failed to load restaurant configuration. Please try refreshing the page. Client error.',
                                         null,
                                         'OK',
                                         'Cancel',
@@ -281,14 +298,40 @@
 
                             //modal callbacks
                             cancel_reservation(reservation_id) {
-                                this.user_reservations = this.user_reservations.filter(id => id !== reservation_id);
-                                this.table_reservations = this.table_reservations.filter(reservation => reservation.id !== reservation_id);
+                                axios.post('/api/delete_reservation', { id: reservation_id }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.user_reservations = this.user_reservations.filter(id => id !== reservation_id);
+                                        this.table_reservations = this.table_reservations.filter(reservation => reservation.id !== reservation_id);
+                                    }
+                                    else
+                                    {
+                                        this.modal_open(
+                                            'Error',
+                                            'Failed to cancel reservation. Please try refreshing the page. Server error.',
+                                            null,
+                                            'OK',
+                                            'Cancel',
+                                            'bg-rose-600 hover:bg-rose-700'
+                                        );
+                                    }
+                                }).catch(error => {
+                                    this.modal_open(
+                                        'Error',
+                                        'Failed to cancel reservation. Please try refreshing the page. Client error.',
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                });
                             },
 
                             //form getters
                             get available_times() {
                                 if (!this.selected_date) { return []; }
-                                if (this.closing_dates.includes(this.selected_date)) { return []; }
+                                if (this.closing_dates.includes(this.selected_date) || this.closing_dates.includes(new Date(this.selected_date).toLocaleDateString('en-US', {weekday: 'long'}))) { return []; }
                                 
                                 //first check custom hours
                                 const custom_hours = this.custom_opening_hours[this.selected_date];
@@ -304,8 +347,8 @@
                                 return this.generate_time_slots(open, close);
                             },
                             get available_durations() {
-                                if (this.closing_dates.includes(this.selected_date)) { return []; }
-                                if (!this.selected_time || !this.selected_date) { return [0.5, 1, 1.5, 2, 2.5, 3]; }
+                                if (this.closing_dates.includes(this.selected_date) || this.closing_dates.includes(new Date(this.selected_date).toLocaleDateString('en-US', {weekday: 'long'}))) { return []; }
+                                if (!this.selected_time || !this.selected_date) { return this.durations; }
                                 
                                 const custom_hours = this.custom_opening_hours[this.selected_date];
                                 const day = new Date(this.selected_date).getDay();
@@ -317,24 +360,32 @@
                                 const selected_minutes = parseInt(minutes);
                                 let hours_until_close;
                                 
-                                if (close < selected_hour) //selected time is before midnight, closing is after
+                                const close_hour = parseInt(close);
+                                const close_minutes = close.includes(':') ? parseInt(close.split(':')[1]) : 0;
+                                
+                                if (close_hour < selected_hour) //selected time is before midnight, closing is after
                                 {
-                                    hours_until_close = (24 - selected_hour) + close;
+                                    hours_until_close = (24 - selected_hour) + close_hour;
+                                    if (close_minutes === 30) hours_until_close += 0.5;
+                                    if (selected_minutes === 30) hours_until_close -= 0.5;
                                 }
-                                else if (selected_hour < close && close < open) //selected time is after midnight
+                                else if (selected_hour < close_hour && close_hour < open) //selected time is after midnight
                                 {
-                                    hours_until_close = close - selected_hour;
+                                    hours_until_close = close_hour - selected_hour;
+                                    if (close_minutes === 30) hours_until_close += 0.5;
+                                    if (selected_minutes === 30) hours_until_close -= 0.5;
                                 }
                                 else //normal case
                                 {
-                                    hours_until_close = close - selected_hour;
+                                    hours_until_close = close_hour - selected_hour;
+                                    if (close_minutes === 30) hours_until_close += 0.5;
+                                    if (selected_minutes === 30) hours_until_close -= 0.5;
                                 }
                                 
-                                const minutes_until_close = selected_minutes === 30 ? hours_until_close - 0.5 : hours_until_close;                                
-                                return [0.5, 1, 1.5, 2, 2.5, 3].filter(duration => duration <= minutes_until_close);
+                                return this.durations.filter(duration => duration <= hours_until_close);
                             },
                             get available_tables() {
-                                if (!this.selected_date || !this.selected_time || !this.duration || this.closing_dates.includes(this.selected_date)) { return []; }
+                                if (!this.selected_date || !this.selected_time || !this.duration || this.closing_dates.includes(this.selected_date) || this.closing_dates.includes(new Date(this.selected_date).toLocaleDateString('en-US', {weekday: 'long'}))) { return []; }
 
                                 const reserved_tables = this.table_reservations.filter(reservation => {
                                     if (reservation.date !== this.selected_date) { return false; }
@@ -352,10 +403,13 @@
                                     const day = new Date(this.selected_date).getDay();
                                     const { open, close } = custom_hours || this.opening_hours[day];
                                     
-                                    if (close < open)
+                                    const open_hour = parseInt(open);
+                                    const close_hour = parseInt(close);
+                                    
+                                    if (close_hour < open_hour)
                                     {
                                         //normalize times to handle midnight crossing
-                                        const normalize = t => t >= open ? t : t + 24;
+                                        const normalize = t => t >= open_hour ? t : t + 24;
                                         const norm_reservation = normalize(reservation_time);
                                         const norm_reservation_end = normalize(reservation_end);
                                         const norm_selected = normalize(selected_time);
@@ -370,33 +424,55 @@
                             },
 
                             //form helpers
-                            parse_duration(duration) {
-                                return duration === 0.5 ? '30 minutes' : duration % 1 === 0 ? duration + ' hour' + (duration > 1 ? 's' : '') : Math.floor(duration) + ' hour' + (Math.floor(duration) > 1 ? 's' : '') + ' 30 minutes';
-                            },
+                            parse_duration(duration) { return duration === 0.5 ? '30 minutes' : duration % 1 === 0 ? duration + ' hour' + (duration > 1 ? 's' : '') : Math.floor(duration) + ' hour' + (Math.floor(duration) > 1 ? 's' : '') + ' 30 minutes'; },
                             generate_time_slots(open, close) {
                                 const times = [];
-                                if (close < open) //open after midnight
+                                const open_hour = parseInt(open);
+                                const open_minutes = open.includes(':') ? parseInt(open.split(':')[1]) : 0;
+                                const close_hour = parseInt(close);
+                                const close_minutes = close.includes(':') ? parseInt(close.split(':')[1]) : 0;
+                                
+                                if (close_hour < open_hour) //open after midnight
                                 {
                                     //times not crossing midnight
-                                    for (let hour = open; hour < 24; ++hour)
+                                    for (let hour = open_hour; hour < 24; ++hour)
                                     {
-                                        times.push(`${hour}:00`);
-                                        times.push(`${hour}:30`);
+                                        if (hour === open_hour && open_minutes === 30)
+                                        {
+                                            times.push(`${hour.toString().padStart(2, '0')}:30`);
+                                        }
+                                        else
+                                        {
+                                            times.push(`${hour.toString().padStart(2, '0')}:00`);
+                                            times.push(`${hour.toString().padStart(2, '0')}:30`);
+                                        }
                                     }
                                     //times crossing midnight
-                                    for (let hour = 0; hour < close; ++hour)
+                                    for (let hour = 0; hour < close_hour; ++hour)
                                     {
-                                        times.push(`${hour}:00`);
-                                        times.push(`${hour}:30`);
+                                        times.push(`${hour.toString().padStart(2, '0')}:00`);
+                                        times.push(`${hour.toString().padStart(2, '0')}:30`);
+                                    }
+                                    if (close_minutes === 30)
+                                    {
+                                        times.push(`${close_hour.toString().padStart(2, '0')}:00`);
                                     }
                                 }
                                 else //open before midnight
                                 {
-                                    for (let hour = open; hour < close; ++hour)
+                                    for (let hour = open_hour; hour < close_hour; ++hour)
                                     {
-                                        times.push(`${hour}:00`);
-                                        times.push(`${hour}:30`);
+                                        if (hour === open_hour && open_minutes === 30)
+                                        {
+                                            times.push(`${hour.toString().padStart(2, '0')}:30`);
+                                        }
+                                        else
+                                        {
+                                            times.push(`${hour.toString().padStart(2, '0')}:00`);
+                                            times.push(`${hour.toString().padStart(2, '0')}:30`);
+                                        }
                                     }
+                                    if (close_minutes === 30) { times.push(`${close_hour.toString().padStart(2, '0')}:00`); }
                                 }
                                 return times;
                             },
@@ -405,44 +481,67 @@
                                        this.selected_date >= this.min_day && 
                                        this.selected_date <= this.max_day && 
                                        !this.closing_dates.includes(this.selected_date) &&
+                                       !this.closing_dates.includes(new Date(this.selected_date).toLocaleDateString('en-US', {weekday: 'long'})) &&
                                        this.selected_time && 
                                        this.duration && 
                                        (with_table ? this.selected_table : true);
                             },
 
                             //form actions
-                            select_table(table_id) {
-                                this.selected_table = table_id;
-                            },
+                            select_table(table_id) { this.selected_table = table_id; },
                             submit_reservation() {
                                 if (!this.is_form_valid(true)) { return; }
 
-                                //push into reservations
-                                const reservation = {
-                                    id: this.table_reservations.length + 1,
+                                axios.post('/api/create_reservation', {
                                     date: this.selected_date,
                                     time: this.selected_time,
                                     duration: this.duration,
-                                    table_id: this.selected_table,
-                                    seats: this.tables.find(table => table.id === this.selected_table).seats
-                                };                                
-                                this.table_reservations.push(reservation);
-
-                                //push to user reservations and make sure it is at correct position
-                                this.user_reservations.push(reservation.id);
-                                this.user_reservations.sort((a, b) => {
-                                    a = this.table_reservations.find(reservation => reservation.id === a);
-                                    b = this.table_reservations.find(reservation => reservation.id === b);
-                                    const dateA = new Date(`${a.date} ${a.time}`);
-                                    const dateB = new Date(`${b.date} ${b.time}`);
-                                    return dateA - dateB;
+                                    table_id: this.selected_table
+                                }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        const reservation = data.reservation;
+                                        console.log(reservation);
+                                        //insert into local variables
+                                        this.table_reservations.push(reservation);
+                                        this.user_reservations.push(reservation.id);
+                                        //sort user reservations by date and time
+                                        this.user_reservations.sort((a, b) => {
+                                            a = this.table_reservations.find(reservation => reservation.id === a);
+                                            b = this.table_reservations.find(reservation => reservation.id === b);
+                                            const dateA = new Date(`${a.date} ${a.time}`);
+                                            const dateB = new Date(`${b.date} ${b.time}`);
+                                            return dateA - dateB;
+                                        });
+                                    }
+                                    else
+                                    {
+                                        this.modal_open(
+                                            'Error',
+                                            'Failed to create reservation. Please try refreshing the page. Server error.',
+                                            null,
+                                            'OK',
+                                            'Cancel',
+                                            'bg-rose-600 hover:bg-rose-700'
+                                        );
+                                    }
+                                }).catch(error => {
+                                    this.modal_open(
+                                        'Error',
+                                        'Failed to create reservation. Please try refreshing the page. Client error.',
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                }).finally(() => {
+                                    //reset form
+                                    this.selected_date = '';
+                                    this.selected_time = '';
+                                    this.duration = '';
+                                    this.selected_table = null;
                                 });
-
-                                //reset form
-                                this.selected_date = '';
-                                this.selected_time = '';
-                                this.duration = '';
-                                this.selected_table = null;
                             },
                         }
                     }

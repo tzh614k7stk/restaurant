@@ -39,7 +39,11 @@
                 links: [
                     { id: 1, href: '/', text: 'Reservations', color: 'text-zinc-900', },
                     { id: 2, href: '/about', text: 'Information', color: 'text-zinc-900', },
-                    { id: 3, href: '/employees', text: 'Employees', color: 'text-zinc-900', },
+                    @auth
+                        @if(DB::table('employees')->where('user_id', Auth::id())->exists())
+                            { id: 3, href: '/employees', text: 'Employees', color: 'text-zinc-900', },
+                        @endif
+                    @endauth
                 ],
                 toggle_menu() {
                     this.is_open = !this.is_open;
