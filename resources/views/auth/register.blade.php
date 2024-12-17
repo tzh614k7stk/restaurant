@@ -13,6 +13,9 @@
 
     @vite('resources/css/tailwind.css')
     @vite('resources/css/app.css')
+
+    @livewireStyles
+    @livewireScripts
 </head>
 
 <body class="bg-gradient-to-b from-zinc-50 to-zinc-300 text-zinc-900">

@@ -71,7 +71,7 @@ class DatabaseSeeder extends Seeder
         //create reservations for the test user
         $reservations = [
             [
-                'date' => '2024-01-08',
+                'date' => '2024-12-08',
                 'time' => '13:00',
                 'duration' => 0.5,
                 'seats' => 4,
@@ -79,7 +79,7 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $user->id,
             ],
             [
-                'date' => '2024-01-10',
+                'date' => '2024-12-10',
                 'time' => '23:30',
                 'duration' => 3.0,
                 'seats' => 2,
@@ -87,7 +87,15 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $user->id,
             ],
             [
-                'date' => '2024-01-13',
+                'date' => '2024-11-13',
+                'time' => '20:00',
+                'duration' => 2.0,
+                'seats' => 2,
+                'table_id' => 3,
+                'user_id' => $user->id,
+            ],
+            [
+                'date' => '2025-01-13',
                 'time' => '20:00',
                 'duration' => 2.0,
                 'seats' => 2,
@@ -101,6 +109,8 @@ class DatabaseSeeder extends Seeder
         $configs = [
             ['name' => 'max_days_in_advance', 'value' => '60'],
             ['name' => 'durations', 'value' => '[0.5, 1, 1.5, 2, 2.5, 3]'],
+            ['name' => 'phone', 'value' => '+420 123 456 789'],
+            ['name' => 'email', 'value' => 'info@example.com'],
         ];
         foreach ($configs as $config) { RestaurantConfig::create($config); }
     }

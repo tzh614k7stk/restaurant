@@ -9,7 +9,11 @@ use App\Models\Reservation;
 use App\Models\OpeningHours;
 use App\Models\RestaurantConfig;
 
-Route::get('/', function () { return view('welcome'); });
+Route::view('/', 'welcome');
+Route::redirect('/home', '/');
+
+Route::view('/about', 'about');
+Route::redirect('/information', '/about');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'show'])->name('login');
@@ -20,6 +24,60 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+Route::post('/api/info_data', function () {
+    //get opening hours
+    $opening_hours = OpeningHours::all();
+    
+    //process opening hours
+    $regular_hours = [];
+    $custom_hours = [];
+    $closing_dates = [];
+    foreach ($opening_hours as $entry)
+    {
+        //specific dates
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $entry->day))
+        {
+            if ($entry->closed) { $closing_dates[] = $entry->day; }
+            else
+            {
+                $custom_hours[$entry->day] = [
+                    'open' => substr($entry->open, 0, 5),
+                    'close' => substr($entry->close, 0, 5)
+                ];
+            }
+        }
+        else
+        {
+            //regular days (starting from Sunday because browser date input starts from Sunday)
+            $day_number = array_search($entry->day, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+            if ($day_number !== false)
+            {
+                if ($entry->closed) { $closing_dates[] = $entry->day; }
+                $regular_hours[$day_number] = [
+                    'open' => substr($entry->open, 0, 5),
+                    'close' => substr($entry->close, 0, 5)
+                ];
+            }
+        }
+    }
+
+    //get restaurant configuration
+    $config = RestaurantConfig::all()->pluck('value', 'name');
+    
+    //parse data from config
+    $phone = $config['phone'];
+    $email = $config['email'];
+
+    return response()->json([
+        'success' => true,
+        'opening_hours' => $regular_hours,
+        'custom_opening_hours' => $custom_hours,
+        'closing_dates' => $closing_dates,
+        'phone' => $phone,
+        'email' => $email
+    ]);
 });
 
 Route::post('/api/restaurant_data', function () {    
@@ -56,7 +114,6 @@ Route::post('/api/restaurant_data', function () {
     $regular_hours = [];
     $custom_hours = [];
     $closing_dates = [];
-
     foreach ($opening_hours as $entry)
     {
         //specific dates
@@ -89,7 +146,7 @@ Route::post('/api/restaurant_data', function () {
     //get restaurant configuration
     $config = RestaurantConfig::all()->pluck('value', 'name');
     
-    //parse durations from config
+    //parse data from config
     $durations = json_decode($config['durations']);
     $max_days_in_advance = intval($config['max_days_in_advance']);
 
@@ -118,7 +175,7 @@ Route::post('/api/create_reservation', function (Request $request) {
 
     //validate request data
     $request->validate([
-        'date' => 'required|date|after:today|before:'.date('Y-m-d', strtotime('+'.$max_days_in_advance.' days')),
+        'date' => 'required|date|after_or_equal:today|before_or_equal:'.date('Y-m-d', strtotime('+'.$max_days_in_advance.' days')),
         'time' => 'required|date_format:H:i',
         'duration' => 'required|numeric|in:'.implode(',', $durations),
         'table_id' => 'required|exists:tables,id'

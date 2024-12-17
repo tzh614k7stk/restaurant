@@ -23,7 +23,6 @@
 
 <body class="bg-gradient-to-b from-zinc-50 to-zinc-300 text-zinc-900">
     <div class="main-container">
-
         @include('navbar')
 
         <div class="min-h-screen px-3 leading-relaxed">
@@ -31,71 +30,69 @@
 
                 <!-- reservation system -->
                 <div x-init="get_restaurant_data()" x-data="reservation_system()" class="max-w-6xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 gap-y-8">
-                    <div class="bg-white overflow-hidden shadow-md rounded-lg">
-                        <div class="px-6 py-8">
-                            <div class="flex items-center gap-2 mb-6">
-                                <h2 class="text-2xl font-bold tracking-wide">Make a Reservation</h2>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                                </svg>
-                            </div>
-                            
-                            <!-- date selection -->
-                            <div class="mb-6">
-                                <label class="block text-zinc-700 text-sm font-bold mb-1">Select Date</label>
-                                <input type="date" :min="min_day" :max="max_day" x-model="selected_date" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                            </div>
-                            <!-- time selection -->
-                            <div class="mb-6">
-                                <label class="block text-zinc-700 text-sm font-bold mb-1">Select Time</label>
-                                <select x-model="selected_time" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                                    <option value="" disabled>choose time</option>
-                                    <template x-for="time in available_times" :key="time">
-                                        <option x-text="time" :value="time"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <!-- duration selection -->
-                            <div class="mb-6">
-                                <label class="block text-zinc-700 text-sm font-bold mb-1">Select Duration</label>
-                                <select x-model="duration" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                                    <option value="" disabled>choose duration</option>
-                                    <template x-for="duration in available_durations" :key="duration">
-                                        <option x-text="parse_duration(duration)" :value="duration"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <!-- table selection -->
-                            <div x-cloak x-show="is_form_valid(false)" class="mb-6">
-                                <div x-cloak x-show="available_tables.length > 0">
-                                    <label class="block text-zinc-700 text-sm font-bold mb-1">Select Table</label>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <template x-for="table in available_tables" :key="table.id">
-                                            <div class="p-4 border rounded" :class="{'bg-green-100': selected_table === table.id, 'hover:bg-zinc-100': selected_table !== table.id}" @click="select_table(table.id)">
-                                                <p class="font-bold" x-text="'Table ' + table.id"></p>
-                                                <p class="text-sm text-zinc-600 flex flex-row items-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                                    </svg>
-                                                    <span x-text="table.seats + ' seats'"></span>
-                                                </p>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- errors -->
-                            <div class="mb-6">
-                                <div x-cloak x-show="is_form_valid(false) && available_tables.length === 0">
-                                    <p class="text-rose-700 text-sm font-bold mb-1">No tables available on this day for the selected time and duration.</p>
-                                </div>
-                                <div x-cloak x-show="closing_dates.includes(selected_date) || closing_dates.includes(new Date(selected_date).toLocaleDateString('en-US', {weekday: 'long'}))">
-                                    <p class="text-rose-700 text-sm font-bold mb-1">We are closed on this date.</p>
-                                </div>
-                            </div>
-                            <!-- submit button -->
-                            <button @click="submit_reservation" :class="is_form_valid(true) ? 'bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950' : 'bg-zinc-500 opacity-50'" class="text-white font-bold rounded py-2 px-3 focus:outline-none">Make Reservation</button>
+                    <div x-cloak x-show="first_load" class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
+                        <div class="flex items-center gap-2 mb-6">
+                            <h2 class="text-2xl font-bold tracking-wide">Make a Reservation</h2>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                            </svg>
                         </div>
+                        
+                        <!-- date selection -->
+                        <div class="mb-6">
+                            <label class="block text-zinc-700 text-sm font-bold mb-1">Select Date</label>
+                            <input type="date" :min="min_day" :max="max_day" x-model="selected_date" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                        </div>
+                        <!-- time selection -->
+                        <div class="mb-6">
+                            <label class="block text-zinc-700 text-sm font-bold mb-1">Select Time</label>
+                            <select x-model="selected_time" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <option value="" disabled>choose time</option>
+                                <template x-for="time in available_times" :key="time">
+                                    <option x-text="time" :value="time"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <!-- duration selection -->
+                        <div class="mb-6">
+                            <label class="block text-zinc-700 text-sm font-bold mb-1">Select Duration</label>
+                            <select x-model="duration" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <option value="" disabled>choose duration</option>
+                                <template x-for="duration in available_durations" :key="duration">
+                                    <option x-text="parse_duration(duration)" :value="duration"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <!-- table selection -->
+                        <div x-cloak x-show="is_form_valid(false)" class="mb-6">
+                            <div x-cloak x-show="available_tables.length > 0">
+                                <label class="block text-zinc-700 text-sm font-bold mb-1">Select Table</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <template x-for="table in available_tables" :key="table.id">
+                                        <div class="p-4 border rounded" :class="{'bg-green-100': selected_table === table.id, 'hover:bg-zinc-100': selected_table !== table.id}" @click="select_table(table.id)">
+                                            <p class="font-bold" x-text="table.name ?? 'Table ' + table.id"></p>
+                                            <p class="text-sm text-zinc-600 flex flex-row items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                                </svg>
+                                                <span x-text="table.seats + ' seats'"></span>
+                                            </p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- errors -->
+                        <div class="mb-6">
+                            <div x-cloak x-show="is_form_valid(false) && available_tables.length === 0">
+                                <p class="text-rose-700 text-sm font-bold mb-1">No tables available on this day for the selected time and duration.</p>
+                            </div>
+                            <div x-cloak x-show="closing_dates.includes(selected_date) || closing_dates.includes(new Date(selected_date).toLocaleDateString('en-US', {weekday: 'long'}))">
+                                <p class="text-rose-700 text-sm font-bold mb-1">We are closed on this date.</p>
+                            </div>
+                        </div>
+                        <!-- submit button -->
+                        <button @click="submit_reservation" :class="is_form_valid(true) ? 'bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950' : 'bg-zinc-500 opacity-50'" class="text-white font-bold rounded py-2 px-3 focus:outline-none">Make Reservation</button>
                     </div>
 
                     <!-- user reservations -->
@@ -104,14 +101,18 @@
                         <div class="flex flex-col gap-y-6 px-6 py-8">
                             <div class="flex items-center gap-2">
                                 <h2 class="text-2xl font-bold tracking-wide">Your Reservations</h2>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                                 </svg>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <template x-for="reservation_id in user_reservations" :key="reservation_id">
+                            <!-- future reservations -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
+                                <div x-cloak x-show="user_reservations.filter(id => { const reservation = table_reservations.find(r => r.id === id); return new Date(reservation.date) >= new Date().setHours(0,0,0,0); }).length === 0" class="col-span-full">
+                                    <p class="text-zinc-600">You have no upcoming reservations.</p>
+                                </div>
+                                <template x-for="reservation_id in user_reservations.filter(id => { const reservation = table_reservations.find(r => r.id === id); return new Date(reservation.date) >= new Date().setHours(0,0,0,0); })" :key="reservation_id">
                                     <div x-data="{ reservation: table_reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
-                                        <p class="font-bold" x-text="'Table ' + reservation.table_id"></p>
+                                        <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                         <p class="text-sm text-zinc-600">
                                             <span class="flex flex-row items-center gap-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -123,7 +124,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                 </svg>
-                                                <span x-text="'Date: ' + reservation.date"></span>
+                                                <span x-text="'Date: ' + new Date(reservation.date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
                                             </span>
                                             <span class="flex flex-row items-center gap-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -138,7 +139,7 @@
                                                 <span x-text="'Duration: ' + parse_duration(reservation.duration)"></span>
                                             </span>
                                             <div class="mt-2">
-                                                <button @click="modal_open('Cancel Reservation', 'Are you sure you want to cancel this reservation?', () => cancel_reservation(reservation.id), 'Yes, cancel it', 'No, keep it', 'bg-rose-600 hover:bg-rose-700')" class="text-sm font-semibold text-rose-600 hover:text-rose-700 flex flex-row items-center gap-1">
+                                                <button @click="$store.modal.open('Cancel Reservation', 'Are you sure you want to cancel this reservation?', () => cancel_reservation(reservation.id), 'Yes, cancel it', 'No, keep it', 'bg-rose-600 hover:bg-rose-700')" class="text-sm font-semibold text-rose-600 hover:text-rose-700 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                     </svg>
@@ -149,6 +150,54 @@
                                     </div>
                                 </template>
                             </div>
+                            <!-- past reservations -->
+                            <div x-cloak x-show="user_reservations.filter(id => { const reservation = table_reservations.find(r => r.id === id); return new Date(reservation.date) < new Date().setHours(0,0,0,0); }).length > 0" x-data="{ show_past: false }" class="flex flex-col gap-4">
+                                <button @click="show_past = !show_past" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': show_past }">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                    <span x-text="show_past ? 'Hide Past Reservations' : 'Show Past Reservations'"></span>
+                                </button>
+                                
+                                <div x-show="show_past" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
+                                    <template x-for="reservation_id in user_reservations.filter(id => { const reservation = table_reservations.find(r => r.id === id); return new Date(reservation.date) < new Date().setHours(0,0,0,0); })" :key="reservation_id">
+                                        <div x-data="{ reservation: table_reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded opacity-75">
+                                            <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
+                                            <p class="text-sm text-zinc-600">
+                                                <span class="flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                                    </svg>
+                                                    <span x-text="'Seats: ' + reservation.seats"></span>
+                                                </span>
+                                                <span class="flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                                    </svg>
+                                                    <span x-text="'Date: ' + new Date(reservation.date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
+                                                </span>
+                                                <span class="flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                    <span x-text="'Time: ' + reservation.time"></span>
+                                                </span>
+                                                <span class="flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                                    </svg>
+                                                    <span x-text="'Duration: ' + parse_duration(reservation.duration)"></span>
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- user info -->
+                    <div x-cloak x-show="first_load" class="bg-white overflow-hidden shadow-md rounded-lg">
+                        <div class="flex flex-col gap-y-6 px-6 py-8">
                             <div class="flex flex-col items-start">
                                 <p class="flex items-center text-lg text-zinc-700 border-b border-zinc-400 mb-2 pr-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -157,13 +206,13 @@
                                     {{ Auth::user()->name }}
                                 </p>
                                 <p class="text-zinc-700 text-sm">
-                                    <i class="text-zinc-500 pr-1">email:</i> {{ Auth::user()->email }}
+                                    <i class="text-zinc-500 pr-1">email:</i> <a>{{ Auth::user()->email }}</a>
                                 </p>
                                 <p class="text-zinc-700 text-sm">
-                                    <i class="text-zinc-500 pr-1">member since:</i> {{ Auth::user()->created_at->format('F Y') }}
+                                    <i class="text-zinc-500 pr-1">member since:</i> <a>{{ Auth::user()->created_at->format('F Y') }}</a>
                                 </p>
                                 <p class="text-zinc-700 text-sm">
-                                    <i class="text-zinc-500 pr-1">number of reservations:</i> 1337
+                                    <i class="text-zinc-500 pr-1">number of reservations:</i> <a x-text="user_reservations.length"></a>
                                 </p>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -200,23 +249,14 @@
                     </div>
                     @endguest
 
-                    <!-- universal modal -->
-                    <div x-cloak x-show="modal_show" x-trap.noscroll="modal_show" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-                            <h3 class="text-lg font-bold mb-4" x-text="modal_title"></h3>
-                            <p class="text-zinc-600 mb-6" x-text="modal_message"></p>
-                            <div class="flex justify-end gap-3">
-                                <button @click="modal_show = false" class="px-4 py-2 text-zinc-600 hover:text-zinc-800" x-text="modal_no"></button>
-                                <button @click="modal_confirm()" class="px-4 py-2 text-white rounded" :class="modal_yes_class" x-text="modal_yes"></button>
-                            </div>
-                        </div>
-                    </div>
+                    @include('modal')
                 </div>
 
                 <script>
                     function reservation_system() {
                         return {
                             //server configuration
+                            first_load: false,
                             max_days_in_advance: null,
                             durations: [],
                             opening_hours: {},
@@ -241,7 +281,7 @@
                                     }
                                     else
                                     {
-                                        this.modal_open(
+                                        Alpine.store('modal').open(
                                             'Error',
                                             'Failed to load restaurant configuration. Please try refreshing the page. Server error.',
                                             null,
@@ -251,7 +291,7 @@
                                         );
                                     }
                                 }).catch(error => {
-                                    this.modal_open(
+                                    Alpine.store('modal').open(
                                         'Error',
                                         'Failed to load restaurant configuration. Please try refreshing the page. Client error.',
                                         null,
@@ -259,41 +299,25 @@
                                         'Cancel',
                                         'bg-rose-600 hover:bg-rose-700'
                                     );
+                                }).finally(() => {
+                                    this.first_load = true; //fix min/max attribute causing date input to flicker
                                 });
                             },
 
                             //user selection
-                            selected_date: '',
+                            selected_date: '', //date input format is based on user's locale, all date variables are yyyy-mm-dd
                             selected_time: '',
                             duration: '',
                             selected_table: null,
-                            min_day: new Date().toISOString().split('T')[0],
+                            //date input is based on user's locale, min and max must follow
+                            get min_day() {
+                                return new Date().toLocaleDateString('en-CA');
+                            },
                             get max_day() {
                                 const date = new Date(this.min_day);
+                                date.setHours(0, 0, 0, 0); //matching php max_day calculation
                                 date.setDate(date.getDate() + this.max_days_in_advance);
-                                return date.toISOString().split('T')[0];
-                            },                            
-
-                            //modal
-                            modal_show: false,
-                            modal_title: '',
-                            modal_message: '',
-                            modal_callback: null,
-                            modal_yes: null,
-                            modal_no: null,
-                            modal_yes_class: 'bg-rose-600 hover:bg-rose-700',
-                            modal_open(title, message, callback, yes, no, yes_class) {
-                                this.modal_title = title;
-                                this.modal_message = message;
-                                this.modal_callback = callback;
-                                this.modal_yes = yes;
-                                this.modal_no = no;
-                                this.modal_yes_class = yes_class;
-                                this.modal_show = true;
-                            },
-                            modal_confirm() {
-                                if (this.modal_callback) { this.modal_callback(); }
-                                this.modal_show = false;
+                                return date.toLocaleDateString('en-CA');
                             },
 
                             //modal callbacks
@@ -307,7 +331,7 @@
                                     }
                                     else
                                     {
-                                        this.modal_open(
+                                        Alpine.store('modal').open(
                                             'Error',
                                             'Failed to cancel reservation. Please try refreshing the page. Server error.',
                                             null,
@@ -317,7 +341,7 @@
                                         );
                                     }
                                 }).catch(error => {
-                                    this.modal_open(
+                                    Alpine.store('modal').open(
                                         'Error',
                                         'Failed to cancel reservation. Please try refreshing the page. Client error.',
                                         null,
@@ -424,7 +448,14 @@
                             },
 
                             //form helpers
-                            parse_duration(duration) { return duration === 0.5 ? '30 minutes' : duration % 1 === 0 ? duration + ' hour' + (duration > 1 ? 's' : '') : Math.floor(duration) + ' hour' + (Math.floor(duration) > 1 ? 's' : '') + ' 30 minutes'; },
+                            parse_duration(duration) {
+                                let result = '';
+                                let hours = Math.floor(duration);
+                                let minutes = Math.floor((duration - hours) * 60);
+                                if (hours > 0) { result += hours + ' hour' + (hours > 1 ? 's' : ''); }
+                                if (minutes > 0) { result += ' ' + minutes + ' minutes'; }
+                                return result;
+                            },
                             generate_time_slots(open, close) {
                                 const times = [];
                                 const open_hour = parseInt(open);
@@ -502,7 +533,6 @@
                                     if (data.success)
                                     {
                                         const reservation = data.reservation;
-                                        console.log(reservation);
                                         //insert into local variables
                                         this.table_reservations.push(reservation);
                                         this.user_reservations.push(reservation.id);
@@ -517,7 +547,7 @@
                                     }
                                     else
                                     {
-                                        this.modal_open(
+                                        Alpine.store('modal').open(
                                             'Error',
                                             'Failed to create reservation. Please try refreshing the page. Server error.',
                                             null,
@@ -527,7 +557,7 @@
                                         );
                                     }
                                 }).catch(error => {
-                                    this.modal_open(
+                                    Alpine.store('modal').open(
                                         'Error',
                                         'Failed to create reservation. Please try refreshing the page. Client error.',
                                         null,

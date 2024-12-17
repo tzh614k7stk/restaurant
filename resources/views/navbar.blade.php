@@ -44,6 +44,9 @@
                             { id: 3, href: '/employees', text: 'Employees', color: 'text-zinc-900', },
                         @endif
                     @endauth
+                    @guest
+                        { id: 3, href: '/login', text: 'Account', color: 'text-zinc-900', },
+                    @endguest
                 ],
                 toggle_menu() {
                     this.is_open = !this.is_open;
