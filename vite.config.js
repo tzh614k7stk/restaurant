@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
         ],
         server: {
             hmr: {
-                host: env.APP_IP,
+                host: env.APP_DOMAIN,
             },
         },
     };

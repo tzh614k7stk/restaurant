@@ -83,6 +83,29 @@
                         </div>
                     </div>
 
+                    <!-- faq -->
+                    <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
+                        <div class="flex items-center gap-2 mb-4">
+                            <h2 class="text-2xl font-bold tracking-wide">FAQ</h2>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-y-2">
+                            <template x-for="(question, index) in faq" :key="index">
+                                <div x-data="{ expanded: false }">
+                                    <button @click="expanded = !expanded" type="button" class="w-full py-2 text-left flex justify-between items-center">
+                                        <span class="font-medium" x-text="question.q"></span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': expanded }">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </button>
+                                    <p x-show="expanded" x-collapse class="pb-2 text-zinc-600" x-text="question.a"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
                     <!-- contact information -->
                     <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
                         <div class="flex items-center gap-2 mb-4">
@@ -131,7 +154,15 @@
                                         this.email = data.email;
                                     }
                                 });
-                            }
+                            },
+
+                            faq: [
+                                {q: 'Do I need to login in order to make a reservation?', a: 'Yes, this is so you can manage your reservations.'},
+                                {q: 'Can I cancel my reservation?', a: 'Yes, you can cancel your reservation at any time without any charges.'},
+                                {q: 'There are no available tables for my desired date and time, what can I do?', a: 'You may give us a call and we will try to arrange a table for you.'},
+                                {q: 'I need to reserve multiple tables, is that possible?', a: 'Yes, we can arrange a reservation for a larger group of people over the phone.'},
+                                {q: 'Is there a parking available?', a: 'Yes, there is a small parking lot in front of the restaurant.'}
+                            ]
                         }
                     }
                 </script>

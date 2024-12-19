@@ -41,11 +41,11 @@
                     { id: 2, href: '/about', text: 'Information', color: 'text-zinc-900', },
                     @auth
                         @if(DB::table('employees')->where('user_id', Auth::id())->exists())
-                            { id: 3, href: '/employees', text: 'Employees', color: 'text-zinc-900', },
+                            { id: 3, href: '/admin', text: 'Employees', color: 'text-zinc-900', },
                         @endif
                     @endauth
                     @guest
-                        { id: 3, href: '/login', text: 'Account', color: 'text-zinc-900', },
+                        { id: 3, href: '/login', text: 'Login', color: 'text-zinc-900', },
                     @endguest
                 ],
                 toggle_menu() {

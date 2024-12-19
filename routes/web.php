@@ -9,21 +9,32 @@ use App\Models\Reservation;
 use App\Models\OpeningHours;
 use App\Models\RestaurantConfig;
 
+//home page
 Route::view('/', 'welcome');
 Route::redirect('/home', '/');
 
+//about page
 Route::view('/about', 'about');
 Route::redirect('/information', '/about');
 
+//logout page is not supported -> redirect to home page
+Route::get('/logout', function () { return redirect('/'); });
+
+//login and register pages
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'show'])->name('login');
     Route::post('login', [LoginController::class, 'login']);
+
     Route::get('register', [RegisterController::class, 'show'])->name('register');
     Route::post('register', [RegisterController::class, 'register']);
 });
 
+//authenticated pages
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
+    Route::get('/admin', function () { return auth()->user()->employee ? view('admin') : redirect('/'); })->name('admin');
+    Route::redirect('/employees', '/admin');
 });
 
 Route::post('/api/info_data', function () {
