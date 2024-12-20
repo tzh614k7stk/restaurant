@@ -38,6 +38,49 @@
                             </svg>
                         </div>
                         
+                        <!-- employee user selection -->
+                        @auth
+                        @if (Auth::user()->employee)
+                        <div class="mb-6">
+                            <label class="block text-zinc-700 text-sm font-bold mb-1 flex flex-row items-center gap-x-2">Select User
+                                <template x-cloak x-if="selected_user">
+                                    <div class="flex flex-row items-center font-normal">
+                                        <p class="text-zinc-600">(selected user: <span class="text-rose-400" x-text="selected_user.name"></span>)</p>
+                                        <button @click="clear_user()" class="flex flex-row items-center text-sm font-semibold text-zinc-600 hover:text-zinc-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                            </svg>
+                                            Clear
+                                        </button>
+                                    </div>
+                                </template>
+                            </label>
+                            <div class="relative">
+                                <!-- search input -->
+                                <input type="text" x-model="user_search"
+                                       @input="search_users"
+                                       @click="search_users"
+                                       @click.away="user_show_results = false"
+                                       placeholder="Search user by name..."
+                                       class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                <!-- search results -->
+                                <div x-show="user_show_results" x-cloak class="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                    <!-- not found -->
+                                    <div x-cloak x-show="user_not_found" class="px-4 py-2 cursor-pointer hover:bg-gray-100">
+                                        <p class="text-zinc-600">No users found.</p>
+                                    </div>
+                                    <!-- search results -->
+                                    <template x-for="user in user_search_result" :key="user.id">
+                                        <div @click="select_user(user)"
+                                             class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                             x-text="user.name">
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        @endauth
                         <!-- date selection -->
                         <div class="mb-6">
                             <label class="block text-zinc-700 text-sm font-bold mb-1">Select Date</label>
@@ -284,6 +327,7 @@
                                         this.tables = data.tables;
                                         this.table_reservations = data.table_reservations;
                                         this.user_reservations = data.user_reservations;
+                                        this.sort_user_reservations();
                                     }
                                     else
                                     {
@@ -326,6 +370,40 @@
                                 return date.toLocaleDateString('en-CA');
                             },
 
+                            //employee selection
+                            selected_user: null,
+                            selected_user_id: null,
+                            user_search: '',
+                            user_search_result: [],
+                            user_show_results: false,
+                            user_not_found: false,
+                            search_users() {
+                                if (this.user_search.length >= 2)
+                                {
+                                    axios.post('/api/admin/search_users', { search: this.user_search }).then(response => {
+                                        this.user_search_result = response.data.users;
+                                        if (this.user_search_result.length === 0) { this.user_not_found = true; }
+                                        else { this.user_not_found = false; }
+                                        this.user_show_results = true;
+                                    });
+                                } else {
+                                    this.user_search_result = [];
+                                    this.user_show_results = false;
+                                }
+                            },
+                            select_user(user) {
+                                this.selected_user = user;
+                                this.selected_user_id = user.id;
+                                this.user_search = user.name;
+                                this.user_show_results = false;
+                            },
+                            clear_user() {
+                                this.selected_user = null;
+                                this.selected_user_id = null;
+                                this.user_search = '';
+                                this.user_show_results = false;
+                            },
+
                             //reservation actions
                             add_to_google_calendar(reservation_id) {
                                 const reservation = this.table_reservations.find(r => r.id === reservation_id);
@@ -366,7 +444,7 @@
                                     {
                                         Alpine.store('modal').open(
                                             'Error',
-                                            'Failed to cancel reservation. Please try refreshing the page. Server error.',
+                                            'Failed to cancel reservation. Please try refreshing the page. Client error.',
                                             null,
                                             'OK',
                                             'Cancel',
@@ -376,7 +454,7 @@
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to cancel reservation. Please try refreshing the page. Client error.',
+                                        'Failed to cancel reservation. Please try refreshing the page. Server error.',
                                         null,
                                         'OK',
                                         'Cancel',
@@ -480,7 +558,7 @@
                                 return this.tables.filter(table => !reserved_tables.includes(table.id));
                             },
 
-                            //form helpers
+                            //helpers
                             parse_duration(duration) {
                                 let result = '';
                                 let hours = Math.floor(duration);
@@ -488,6 +566,16 @@
                                 if (hours > 0) { result += hours + ' hour' + (hours > 1 ? 's' : ''); }
                                 if (minutes > 0) { result += ' ' + minutes + ' minutes'; }
                                 return result;
+                            },
+                            sort_user_reservations() {
+                                //sort user reservations by date and time
+                                this.user_reservations.sort((a, b) => {
+                                    a = this.table_reservations.find(reservation => reservation.id === a);
+                                    b = this.table_reservations.find(reservation => reservation.id === b);
+                                    const dateA = new Date(`${a.date} ${a.time}`);
+                                    const dateB = new Date(`${b.date} ${b.time}`);
+                                    return dateA - dateB;
+                                });
                             },
                             generate_time_slots(open, close) {
                                 const times = [];
@@ -560,23 +648,24 @@
                                     date: this.selected_date,
                                     time: this.selected_time,
                                     duration: this.duration,
-                                    table_id: this.selected_table
+                                    table_id: this.selected_table,
+                                    ...(this.selected_user_id ? { user_id: this.selected_user_id } : {})
                                 }).then(response => {
                                     const data = response.data;
                                     if (data.success)
                                     {
+                                        //if user is not logged in, we never get here and this prevents error on getting user id from Auth::user() on page load
+                                        @auth
                                         const reservation = data.reservation;
                                         //insert into local variables
                                         this.table_reservations.push(reservation);
-                                        this.user_reservations.push(reservation.id);
-                                        //sort user reservations by date and time
-                                        this.user_reservations.sort((a, b) => {
-                                            a = this.table_reservations.find(reservation => reservation.id === a);
-                                            b = this.table_reservations.find(reservation => reservation.id === b);
-                                            const dateA = new Date(`${a.date} ${a.time}`);
-                                            const dateB = new Date(`${b.date} ${b.time}`);
-                                            return dateA - dateB;
-                                        });
+                                        //insert into user reservations only if for current user
+                                        if (this.selected_user_id === null || this.selected_user_id === {{ Auth::user()->id }})
+                                        {
+                                            this.user_reservations.push(reservation.id);
+                                            this.sort_user_reservations();
+                                        }
+                                        @endauth
                                     }
                                     else
                                     {
@@ -604,6 +693,7 @@
                                     this.selected_time = '';
                                     this.duration = '';
                                     this.selected_table = null;
+                                    this.clear_user();
                                 });
                             },
                         }

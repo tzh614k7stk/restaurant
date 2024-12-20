@@ -8,7 +8,8 @@ use App\Models\Table;
 use App\Models\Reservation;
 use App\Models\OpeningHours;
 use App\Models\RestaurantConfig;
-
+use App\Http\Middleware\Employee;
+use App\Models\User;
 //home page
 Route::view('/', 'welcome');
 Route::redirect('/home', '/');
@@ -35,8 +36,47 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin', function () { return auth()->user()->employee ? view('admin') : redirect('/'); })->name('admin');
     Route::redirect('/employees', '/admin');
+
+    //employee panel
+    Route::middleware(Employee::class)->group(function () {
+        Route::post('/api/admin/search_users', function (Request $request) {
+            $request->validate([
+                'search' => 'required|string'
+            ]);
+
+            $users = User::where('name', 'like', '%'.$request->search.'%')->get();
+            $users = $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name
+                ];
+            });
+            return response()->json(['success' => true, 'users' => $users]);
+        });
+
+        Route::post('/api/admin/user_data', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:users,id'
+            ]);
+
+            $user = User::find($request->id);
+            $reservations = Reservation::where('user_id', $user->id)->with('table')->get();
+            return response()->json(['success' => true, 'user' => $user, 'reservations' => $reservations]);
+        });
+
+        Route::post('/api/admin/reservations', function (Request $request) {
+            $request->validate([
+                'date' => 'required|date'
+            ]);
+
+            $reservations = Reservation::where('date', $request->date)->with('table', 'user')->get();
+            $tables = Table::all();
+            return response()->json(['success' => true, 'reservations' => $reservations, 'tables' => $tables]);
+        });
+    });
 });
 
+//data for pages
 Route::post('/api/info_data', function () {
     //get opening hours
     $opening_hours = OpeningHours::all();
@@ -90,7 +130,6 @@ Route::post('/api/info_data', function () {
         'email' => $email
     ]);
 });
-
 Route::post('/api/restaurant_data', function () {    
     //get all the tables
     $tables = Table::all(['id', 'name', 'seats'])->map(function ($table) {
@@ -174,10 +213,11 @@ Route::post('/api/restaurant_data', function () {
     ]);
 });
 
+//reservation actions
 Route::post('/api/create_reservation', function (Request $request) {
     //must be authenticated
     $user = auth()->user();
-    if (!$user) { return response()->json(['message' => 'Unauthorized'], 401); }
+    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
 
     //get restaurant configuration
     $config = RestaurantConfig::all()->pluck('value', 'name');
@@ -189,7 +229,8 @@ Route::post('/api/create_reservation', function (Request $request) {
         'date' => 'required|date|after_or_equal:today|before_or_equal:'.date('Y-m-d', strtotime('+'.$max_days_in_advance.' days')),
         'time' => 'required|date_format:H:i',
         'duration' => 'required|numeric|in:'.implode(',', $durations),
-        'table_id' => 'required|exists:tables,id'
+        'table_id' => 'required|exists:tables,id',
+        'user_id' => 'sometimes|required|exists:users,id'
     ]);
 
     //check if table is available at requested time
@@ -205,7 +246,23 @@ Route::post('/api/create_reservation', function (Request $request) {
             $q->where('time', '<', date('H:i', $end_time))->where('time', '>', date('H:i', $start_time));
         });
     })->first();
-    if ($existing_reservation) { return response()->json(['message' => 'Table is not available at requested time'], 422); }
+    if ($existing_reservation) { return response()->json(['success' => false, 'message' => 'Table is not available at requested time'], 422); }
+
+    //if user_id is provided, check if user exists and current user is employee
+    if ($request->user_id)
+    {
+        $for_user = User::find($request->user_id);
+        if (!$for_user) { return response()->json(['success' => false, 'message' => 'User not found'], 404); }
+        if (!$user->employee && $for_user->id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
+    }
+
+    //check if user has too many future reservations (unless employee)
+    if (!$user->employee)
+    {
+        $max_future_reservations = intval($config['max_future_reservations']);
+        $future_reservations = Reservation::where('user_id', $user->id)->where('date', '>=', date('Y-m-d'))->count();
+        if ($future_reservations >= $max_future_reservations) { return response()->json(['success' => false, 'message' => 'Maximum amount of reservations reached'], 422); }
+    }
 
     //create reservation
     $reservation = Reservation::create([
@@ -214,15 +271,14 @@ Route::post('/api/create_reservation', function (Request $request) {
         'duration' => $request->duration,
         'seats' => Table::find($request->table_id)->seats,
         'table_id' => $request->table_id,
-        'user_id' => $user->id
+        'user_id' => $request->user_id ?? $user->id
     ]);
-    return response()->json(['reservation' => $reservation, 'success' => true]);
+    return response()->json(['success' => true, 'reservation' => $reservation]);
 });
-
 Route::post('/api/delete_reservation', function (Request $request) {
     //must be authenticated
     $user = auth()->user();
-    if (!$user) { return response()->json(['message' => 'Unauthorized'], 401); }
+    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
 
     //validate request data
     $request->validate([
@@ -231,10 +287,10 @@ Route::post('/api/delete_reservation', function (Request $request) {
 
     //get reservation
     $reservation = Reservation::find($request->id);
-    if (!$reservation) { return response()->json(['message' => 'Reservation not found'], 404); }
+    if (!$reservation) { return response()->json(['success' => false, 'message' => 'Reservation not found'], 404); }
 
     //check if reservation belongs to user or is employee
-    if ($reservation->user_id !== $user->id && !$user->is_employee) { return response()->json(['message' => 'Unauthorized'], 401); }
+    if (!$user->employee && $reservation->user_id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
 
     //delete reservation
     $reservation->delete();

@@ -111,6 +111,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'durations', 'value' => '[0.5, 1, 1.5, 2, 2.5, 3]'],
             ['name' => 'phone', 'value' => '+420 123 456 789'],
             ['name' => 'email', 'value' => 'info@example.com'],
+            ['name' => 'max_future_reservations', 'value' => '5'],
         ];
         foreach ($configs as $config) { RestaurantConfig::create($config); }
     }
