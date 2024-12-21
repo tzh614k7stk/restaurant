@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        //create a bunch of other users
+        User::factory()->count(10)->create();
 
         //add test user as an employee + admin
         Employee::create([
@@ -53,7 +55,8 @@ class DatabaseSeeder extends Seeder
             OpeningHours::create([
                 'day' => $day,
                 'open' => '10:00',
-                'close' => $day === 'Friday' || $day === 'Saturday' ? '03:00' : '22:00',
+                'close' => ($day === 'Friday' || $day === 'Saturday') ? '03:00' : '22:00',
+                'close_on_next_day' => ($day === 'Friday' || $day === 'Saturday'),
                 'closed' => $day === 'Sunday',
             ]);
         }
@@ -64,44 +67,12 @@ class DatabaseSeeder extends Seeder
         OpeningHours::create([
             'day' => '2025-01-02',
             'open' => '11:00',
-            'close' => '16:30',
+            'close' => '14:30',
             'closed' => false,
         ]);
 
         //create reservations for the test user
         $reservations = [
-            [
-                'date' => '2024-12-08',
-                'time' => '13:00',
-                'duration' => 0.5,
-                'seats' => 4,
-                'table_id' => 6,
-                'user_id' => $user->id,
-            ],
-            [
-                'date' => '2024-12-10',
-                'time' => '23:30',
-                'duration' => 3.0,
-                'seats' => 2,
-                'table_id' => 1,
-                'user_id' => $user->id,
-            ],
-            [
-                'date' => '2024-11-13',
-                'time' => '20:00',
-                'duration' => 2.0,
-                'seats' => 2,
-                'table_id' => 3,
-                'user_id' => $user->id,
-            ],
-            [
-                'date' => '2025-01-13',
-                'time' => '20:00',
-                'duration' => 2.0,
-                'seats' => 2,
-                'table_id' => 3,
-                'user_id' => $user->id,
-            ],
         ];
         foreach ($reservations as $reservation) { Reservation::create($reservation); }
 
@@ -112,6 +83,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'phone', 'value' => '+420 123 456 789'],
             ['name' => 'email', 'value' => 'info@example.com'],
             ['name' => 'max_future_reservations', 'value' => '5'],
+            ['name' => 'timezone', 'value' => 'Europe/Prague'],
         ];
         foreach ($configs as $config) { RestaurantConfig::create($config); }
     }

@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->date('date');
-            $table->time('time');
+            $table->string('start_date', 10); //yyyy-mm-dd
+            $table->string('end_date', 10); //yyyy-mm-dd
+            $table->string('start_time', 5); //hh:mm
+            $table->string('end_time', 5); //hh:mm
             $table->decimal('duration', 3, 1); //in hours (e.g. 1.5 = 1 hour and 30 minutes)
             $table->integer('seats'); //taking note of the number of seats the table had at the time of making the reservation
             $table->foreignId('table_id')->constrained('tables'); //prevent deletion of tables with reservations
