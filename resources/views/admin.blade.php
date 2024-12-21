@@ -87,7 +87,7 @@
                                                         <td class="px-6 py-4 whitespace-nowrap text-yellow-500" x-text="reservation.seats !== reservation.table.seats ? 'Table has only ' + reservation.table.seats + ' seats' : ''"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap" x-text="reservation.note"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap flex flex-col">
-                                                            <button @click="edit_note(reservation.id, reservation.note)" class="text-zinc-600 hover:text-zinc-800">Edit Note</button>
+                                                            <button @click="edit_reservation_note(reservation.id, reservation.note)" class="text-zinc-600 hover:text-zinc-800">Edit Note</button>
                                                             <button @click="cancel_reservation(reservation.id)" class="text-rose-500 hover:text-rose-700">Cancel</button>
                                                         </td>
                                                     </tr>
@@ -158,7 +158,14 @@
                                                 <p class="text-zinc-600">Name: <span class="text-zinc-700" x-text="user_data.name"></span></p>
                                                 <p class="text-zinc-600">Email: <span class="text-zinc-700" x-text="user_data.email"></span></p>
                                                 <p class="text-zinc-600">Member since: <span class="text-zinc-700" x-text="style_date(new Date(user_data.created_at)) + ' ' + style_time(new Date(user_data.created_at))"></span></p>
+                                                <p x-cloak x-show="user_data.note" class="text-zinc-600">Note: <span class="text-zinc-700" x-text="user_data.note"></span></p>
                                             </div>
+                                            <button @click="edit_user_note(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                </svg>
+                                                Edit Note
+                                            </button>
                                         </div>
                                     </template>
                                     <!-- user reservations -->
@@ -212,7 +219,7 @@
                                                                     <span x-text="'Note: ' + reservation.note"></span>
                                                                 </span>
                                                                 <div class="mt-2 flex flex-col gap-y-1">
-                                                                    <button @click="edit_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                                    <button @click="edit_reservation_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                                         </svg>
@@ -278,7 +285,7 @@
                                                                     <span x-text="'Note: ' + reservation.note"></span>
                                                                 </span>
                                                                 <div class="mt-2 flex flex-col gap-y-1">
-                                                                    <button @click="edit_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                                    <button @click="edit_reservation_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                                         </svg>
@@ -518,14 +525,14 @@
                                     'bg-rose-600 hover:bg-rose-700'
                                 );
                             },
-                            edit_note(reservation_id, note) {
+                            edit_reservation_note(reservation_id, note) {
                                 Alpine.store('modal').open(
                                     'Edit Note',
                                     'Enter the new note for this reservation.',
                                     () => {
                                         note = Alpine.store('modal').input;
                                         if (!note) { note = null; }
-                                        axios.post('/api/admin/note', { id: reservation_id, note: note }).then(response => {
+                                        axios.post('/api/admin/reservation_note', { id: reservation_id, note: note }).then(response => {
                                             if (response.data.success)
                                             {
                                                 //update note in reservations
@@ -535,6 +542,38 @@
                                                 //update note in user_reservations 
                                                 const user_reservation = this.user_reservations.find(r => r.id === reservation_id);
                                                 if (user_reservation) { user_reservation.note = note; }
+                                            }
+                                        }).catch(error => {
+                                            Alpine.store('modal').open(
+                                                'Error',
+                                                'Failed to edit note. Please try refreshing the page. Server error.',
+                                                null,
+                                                'OK',
+                                                'Cancel',
+                                                'bg-rose-600 hover:bg-rose-700'
+                                            );
+                                        });
+                                    },
+                                    'Save',
+                                    'Cancel',
+                                    'bg-zinc-700 hover:bg-zinc-800',
+                                    true,
+                                    note
+                                );
+                            },
+                            edit_user_note(user_id, note) {
+                                Alpine.store('modal').open(
+                                    'Edit Note',
+                                    'Enter the new note for the user.',
+                                    () => {
+                                        note = Alpine.store('modal').input;
+                                        if (!note) { note = null; }
+                                        axios.post('/api/admin/user_note', { id: user_id, note: note }).then(response => {
+                                            if (response.data.success)
+                                            {
+                                                //update note in user
+                                                const user = this.user_data;
+                                                if (user) { user.note = note; }
                                             }
                                         }).catch(error => {
                                             Alpine.store('modal').open(

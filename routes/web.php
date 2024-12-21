@@ -66,6 +66,8 @@ Route::middleware('auth')->group(function () {
                 $note = DB::table('reservation_notes')->where('reservation_id', $reservation->id)->first();
                 $reservation->note = $note ? $note->note : null;
             }
+            $note = DB::table('user_notes')->where('user_id', $user->id)->first();
+            $user->note = $note ? $note->note : null;
             return response()->json(['success' => true, 'user' => $user, 'reservations' => $reservations]);
         });
 
@@ -84,7 +86,7 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => true, 'reservations' => $reservations, 'tables' => $tables]);
         });
 
-        Route::post('/api/admin/note', function (Request $request) {
+        Route::post('/api/admin/reservation_note', function (Request $request) {
             $request->validate([
                 'id' => 'required|exists:reservations,id',
                 'note' => 'nullable|string|max:256'
@@ -93,6 +95,19 @@ Route::middleware('auth')->group(function () {
             //if reservation has note, update it (if null, delete it) otherwise create it
             if ($request->note === null) { DB::table('reservation_notes')->where('reservation_id', $request->id)->delete(); }
             else { DB::table('reservation_notes')->updateOrInsert(['reservation_id' => $request->id], ['note' => $request->note]); }
+            
+            return response()->json(['success' => true]);
+        });
+
+        Route::post('/api/admin/user_note', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:users,id',
+                'note' => 'nullable|string|max:256'
+            ]);
+
+            //if user has note, update it (if null, delete it) otherwise create it
+            if ($request->note === null) { DB::table('user_notes')->where('user_id', $request->id)->delete(); }
+            else { DB::table('user_notes')->updateOrInsert(['user_id' => $request->id], ['note' => $request->note]); }
             
             return response()->json(['success' => true]);
         });
