@@ -345,7 +345,7 @@
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to load restaurant configuration. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        'Failed to load restaurant configuration. ' + (error.response?.data?.message || 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -397,7 +397,7 @@
                                     }).catch(error => {
                                         Alpine.store('modal').open(
                                             'Error',
-                                            'Failed to search users. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                            'Failed to search users. ' + (error.response?.data?.message || 'Unknown error.'),
                                             null,
                                             'OK',
                                             'Cancel',
@@ -461,7 +461,7 @@
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to cancel reservation. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        'Failed to cancel reservation. ' + (error.response?.data?.message || 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -695,7 +695,7 @@
                                         'Error',
                                         (error.response && error.response.status === 401) ?
                                             'You must be logged in to make a reservation.' :
-                                            'Failed to create reservation. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                            'Failed to create reservation. ' + (error.response?.data?.message || 'Unknown error.'),
                                         (error.response && error.response.status === 401) ? () => window.location.href = '/login' : null,
                                         (error.response && error.response.status === 401) ? 'Login' : 'OK',
                                         'Cancel',

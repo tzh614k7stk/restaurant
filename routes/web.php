@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
             }
             $note = DB::table('user_notes')->where('user_id', $user->id)->first();
             $user->note = $note ? $note->note : null;
+            $user->employee = $user->employee ? true : false;
             return response()->json(['success' => true, 'user' => $user, 'reservations' => $reservations]);
         });
 
@@ -112,6 +113,58 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => true]);
         });
 
+        Route::post('/api/admin/save_opening_hours', function (Request $request) {
+            $request->validate([
+                'day' => 'required|string|max:10',
+                'open' => 'required_if:closed,false|string|max:5',
+                'close' => 'required_if:closed,false|string|max:5',
+                'closed' => 'required|boolean'
+            ]);
+    
+            $opening_hours = OpeningHours::updateOrCreate(['day' => $request->day],
+                [
+                    'closed' => $request->closed,
+                    'open' => $request->open,
+                    'close' => $request->close,
+                    'close_on_next_day' => !$request->closed && DateTime::createFromFormat('H:i', $request->close) < DateTime::createFromFormat('H:i', $request->open)
+                ]
+            );
+    
+            return response()->json(['success' => true]);
+        });
+        Route::post('/api/admin/save_special_hours', function (Request $request) {
+            $request->validate([
+                'date' => 'required|date',
+                'open' => 'required_if:closed,false|string|max:5',
+                'close' => 'required_if:closed,false|string|max:5',
+                'closed' => 'required|boolean'
+            ]);
+
+            $opening_hours = OpeningHours::updateOrCreate(['day' => $request->date],
+                array_merge(
+                    ['closed' => $request->closed],
+                    !$request->closed ?
+                    [
+                        'open' => $request->open,
+                        'close' => $request->close,
+                        'close_on_next_day' => DateTime::createFromFormat('H:i', $request->close) < DateTime::createFromFormat('H:i', $request->open)
+                    ]
+                    : []
+                )
+            );
+            
+            return response()->json(['success' => true]);
+        });
+
+        Route::post('/api/admin/delete_special_hours', function (Request $request) {
+            $request->validate([
+                'date' => 'required|date'
+            ]);
+
+            $opening_hours = OpeningHours::where('day', $request->date)->delete();
+            return response()->json(['success' => true]);
+        });
+
         Route::post('/api/admin/create_duration', function (Request $request) {
             $request->validate([
                 'duration' => 'required|decimal:0,1|min:0.5'
@@ -135,6 +188,7 @@ Route::middleware('auth')->group(function () {
             RestaurantConfig::where('name', 'durations')->update(['value' => $durations]);
             return response()->json(['success' => true]);
         });
+
         Route::post('/api/admin/delete_duration', function (Request $request) {
             $request->validate([
                 'duration' => 'required|decimal:0,1|min:0.5'
@@ -143,6 +197,32 @@ Route::middleware('auth')->group(function () {
             $durations = json_decode(RestaurantConfig::where('name', 'durations')->first()->value);
             $durations = array_values(array_diff($durations, [$request->duration]));
             RestaurantConfig::where('name', 'durations')->update(['value' => $durations]);
+            return response()->json(['success' => true]);
+        });
+
+        Route::post('/api/admin/add_employee', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:users,id'
+            ]);
+
+            if (!auth()->user()->employee->admin) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
+
+            if (DB::table('employees')->where('user_id', $request->id)->exists()) { return response()->json(['success' => false, 'message' => 'Employee already exists.'], 422); }
+
+            DB::table('employees')->insert(['user_id' => $request->id]);
+            $employee = DB::table('users')->join('employees', 'users.id', '=', 'employees.user_id')->select('employees.admin', 'users.email', 'users.name', 'employees.id')->where('users.id', $request->id)->first();
+
+            return response()->json(['success' => true, 'employee' => $employee]);
+        });
+
+        Route::post('/api/admin/remove_employee', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:employees,id'
+            ]);
+
+            if (!auth()->user()->employee->admin) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
+
+            DB::table('employees')->where('id', $request->id)->delete();
             return response()->json(['success' => true]);
         });
 
@@ -189,13 +269,19 @@ Route::middleware('auth')->group(function () {
                 }
             }
 
+            //employees
+            $employees = auth()->user()->employee->admin ?
+                DB::table('users')->join('employees', 'users.id', '=', 'employees.user_id')->select('employees.admin', 'users.email', 'users.name', 'employees.id')->get()
+                : [];
+
             return response()->json([
                 'success' => true,
                 'timezone' => $timezone,
                 'opening_hours' => $regular_hours,
                 'custom_opening_hours' => $custom_hours,
                 'closing_dates' => $closing_dates,
-                'durations' => $durations
+                'durations' => $durations,
+                'employees' => $employees
             ]);
         });
     });
@@ -257,6 +343,7 @@ Route::post('/api/info_data', function () {
         'email' => $email
     ]);
 });
+
 Route::post('/api/restaurant_data', function () {    
     //get all the tables
     $tables = Table::all(['id', 'name', 'seats'])->map(function ($table) {
@@ -451,6 +538,7 @@ Route::post('/api/create_reservation', function (Request $request) {
 
     return response()->json(['success' => true, 'reservation' => $reservation]);
 });
+
 Route::post('/api/delete_reservation', function (Request $request) {
     //must be authenticated
     $user = auth()->user();

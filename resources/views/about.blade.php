@@ -160,7 +160,7 @@
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to get restaurant information. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        'Failed to get restaurant information. ' + (error.response?.data?.message || 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
