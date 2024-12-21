@@ -61,6 +61,9 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <h3 class="text-lg font-semibold mb-2">Regular Hours</h3>
+                                <template x-if="Object.keys(opening_hours).length === 0">
+                                    <p class="text-zinc-600">No regular hours currently scheduled.</p>
+                                </template>
                                 <template x-for="(hours, day) in opening_hours" :key="day">
                                     <div class="flex justify-between py-1">
                                         <span x-text="['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]"></span>
@@ -153,6 +156,16 @@
                                         this.phone = data.phone;
                                         this.email = data.email;
                                     }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to get restaurant information. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
                                 });
                             },
 

@@ -308,6 +308,7 @@
                         return {
                             //server configuration
                             first_load: false,
+                            min_hours_before_reservation: null,
                             timezone: '',
                             max_future_reservations: null,
                             max_days_in_advance: null,
@@ -323,6 +324,7 @@
                                     const data = response.data;
                                     if (data.success)
                                     {
+                                        this.min_hours_before_reservation = data.min_hours_before_reservation;
                                         this.timezone = data.timezone;
                                         this.max_future_reservations = data.max_future_reservations;
                                         this.max_days_in_advance = data.max_days_in_advance;
@@ -339,21 +341,11 @@
                                         this.user_reservations = data.user_reservations;
                                         this.sort_user_reservations();
                                     }
-                                    else
-                                    {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to load restaurant configuration. Please try refreshing the page. Server error.',
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
-                                    }
+                                    else { throw { response: {...response} }; }
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to load restaurant configuration. Please try refreshing the page. Client error.',
+                                        'Failed to load restaurant configuration. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -393,10 +385,24 @@
                                 if (this.user_search.length >= 2)
                                 {
                                     axios.post('/api/admin/search_users', { search: this.user_search }).then(response => {
-                                        this.user_search_result = response.data.users;
-                                        if (this.user_search_result.length === 0) { this.user_not_found = true; }
-                                        else { this.user_not_found = false; }
-                                        this.user_show_results = true;
+                                        const data = response.data;
+                                        if (data.success)
+                                        {
+                                            this.user_search_result = data.users;
+                                            if (this.user_search_result.length === 0) { this.user_not_found = true; }
+                                            else { this.user_not_found = false; }
+                                            this.user_show_results = true;
+                                        }
+                                        else { throw { response: {...response} }; }
+                                    }).catch(error => {
+                                        Alpine.store('modal').open(
+                                            'Error',
+                                            'Failed to search users. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                            null,
+                                            'OK',
+                                            'Cancel',
+                                            'bg-rose-600 hover:bg-rose-700'
+                                        );
                                     });
                                 } else {
                                     this.user_search_result = [];
@@ -451,21 +457,11 @@
                                         this.user_reservations = this.user_reservations.filter(id => id !== reservation_id);
                                         this.reservations = this.reservations.filter(reservation => reservation.id !== reservation_id);
                                     }
-                                    else
-                                    {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to cancel reservation. Please try refreshing the page. Client error.',
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
-                                    }
+                                    else { throw { response: {...response} }; }
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to cancel reservation. Please try refreshing the page. Server error.',
+                                        'Failed to cancel reservation. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -693,21 +689,13 @@
                                         }
                                         @endauth
                                     }
-                                    else
-                                    {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to create reservation. Please try refreshing the page. Client error.',
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
-                                    }
+                                    else { throw { response: {...response} }; }
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        (error.response && error.response.status === 401) ? 'You must be logged in to make a reservation.' : 'Failed to create reservation. Please try refreshing the page. Server error.',
+                                        (error.response && error.response.status === 401) ?
+                                            'You must be logged in to make a reservation.' :
+                                            'Failed to create reservation. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                         (error.response && error.response.status === 401) ? () => window.location.href = '/login' : null,
                                         (error.response && error.response.status === 401) ? 'Login' : 'OK',
                                         'Cancel',

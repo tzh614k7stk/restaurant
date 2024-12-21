@@ -84,6 +84,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'email', 'value' => 'info@example.com'],
             ['name' => 'max_future_reservations', 'value' => '5'],
             ['name' => 'timezone', 'value' => 'Europe/Prague'],
+            ['name' => 'min_hours_before_reservation', 'value' => '2'],
         ];
         foreach ($configs as $config) { RestaurantConfig::create($config); }
     }

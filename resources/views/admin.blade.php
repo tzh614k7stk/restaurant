@@ -304,6 +304,141 @@
                         </div>
                     </template>
 
+                    <!-- opening hours -->
+                    <template x-cloak x-if="reservations_loaded">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
+                            <div class="flex items-center gap-2 mb-6">
+                                <h2 class="text-2xl font-bold tracking-wide">Opening Hours</h2>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </div>
+                            <p x-cloak x-show="Object.keys(opening_hours).length === 0" class="text-zinc-600">No opening hours currently scheduled.</p>
+                            <div x-cloak x-show="Object.keys(opening_hours).length > 0" class="overflow-auto">
+                                <table class="min-w-full divide-y divide-zinc-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Day</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Opening Time</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Closing Time</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-zinc-200">
+                                        <template x-for="(hours, day) in opening_hours" :key="day">
+                                            <tr class="hover:bg-zinc-200">
+                                                <td class="px-6 py-4 whitespace-nowrap capitalize" x-text="['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]"></td>
+                                                <td class="px-6 py-4 whitespace-nowrap" x-text="closing_dates.includes(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]) ? '-' : hours.open"></td>
+                                                <td class="px-6 py-4 whitespace-nowrap" x-text="closing_dates.includes(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]) ? '-' : hours.close"></td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                        :class="closing_dates.includes(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]) ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'"
+                                                        x-text="closing_dates.includes(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]) ? 'Closed' : 'Open'">
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- special hours -->
+                    <template x-cloak x-if="reservations_loaded">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center gap-2 mb-6">
+                                    <h2 class="text-2xl font-bold tracking-wide">Special Hours</h2>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                                <div class="overflow-auto">
+                                    <template x-if="Object.keys(custom_opening_hours).length === 0 && !closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
+                                        <p class="text-zinc-600">No special hours currently scheduled.</p>
+                                    </template>
+                                    <template x-if="Object.keys(custom_opening_hours).length > 0 || closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
+                                        <table class="min-w-full divide-y divide-zinc-200">
+                                            <thead>
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Date</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Opening Time</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Closing Time</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-zinc-200">
+                                                <template x-for="date in [...Object.keys(custom_opening_hours), ...closing_dates.filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/))].sort((a,b) => new Date(a) - new Date(b))" :key="date">
+                                                    <tr class="hover:bg-zinc-200">
+                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="new Date(date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></td>
+                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="date in custom_opening_hours ? custom_opening_hours[date].open : '-'"></td>
+                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="date in custom_opening_hours ? custom_opening_hours[date].close : '-'"></td>
+                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                                :class="date in custom_opening_hours ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                                                x-text="date in custom_opening_hours ? 'Special Hours' : 'Closed'">
+                                                            </span>
+                                                        </td>
+                                                        <p x-cloak x-show="durations.length === 0" class="text-zinc-600">No durations available.</p>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- durations -->
+                    <template x-cloak x-if="reservations_loaded">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center gap-2 mb-6">
+                                    <h2 class="text-2xl font-bold tracking-wide">Available Durations for Reservations</h2>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                    </svg>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-sm font-semibold text-zinc-600">New Duration (in hours) - only whole hours or half hours are allowed (e.g. 0.5, 2, 2.5)</label>
+                                    <div class="flex flex-row gap-2">
+                                        <input x-model="new_duration" type="number" step="0.5" min="0.5" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                        <button @click="create_duration(new_duration)" class="flex relative items-center gap-2 bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950 text-white font-bold rounded py-2 px-3 focus:outline-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            Create
+                                        </button>
+                                    </div>
+                                </div>
+                                <p x-cloak x-show="durations.length === 0" class="text-zinc-600">No durations available.</p>
+                                <div x-cloak x-show="durations.length > 0" class="overflow-auto">
+                                    <table class="min-w-full divide-y divide-zinc-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Duration</th>
+                                                <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-zinc-200">
+                                            <template x-for="duration in durations" :key="duration">
+                                                <tr class="hover:bg-zinc-200">
+                                                    <td class="px-6 py-4 whitespace-nowrap" x-text="parse_duration(duration)"></td>
+                                                    <td class="px-6 py-4 whitespace-nowrap flex flex-col items-end">
+                                                        <button @click="delete_duration(duration)" class="text-rose-500 hover:text-rose-700">Delete</button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     @include('modal')
                 </div>
 
@@ -313,19 +448,28 @@
                             //server configuration
                             first_load: false,
                             timezone: '',
+                            durations: [],
                             opening_hours: {},
                             custom_opening_hours: {},
+                            closing_dates: [],
                             get_restaurant_config() {
                                 axios.post('/api/admin/config').then(response => {
-                                    this.timezone = response.data.timezone;
-                                    this.opening_hours = response.data.opening_hours;
-                                    this.custom_opening_hours = response.data.custom_opening_hours;
-                                    if (this.date === null) { this.date = this.today; }
-                                    this.get_reservations();
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.timezone = data.timezone;
+                                        this.opening_hours = data.opening_hours;
+                                        this.custom_opening_hours = data.custom_opening_hours;
+                                        this.closing_dates = data.closing_dates;
+                                        this.durations = data.durations;
+                                        if (this.date === null) { this.date = this.today; }
+                                        this.get_reservations();
+                                    }
+                                    else { throw { response: {...response} }; }
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to get restaurant configuration. Server error.',
+                                        'Failed to get restaurant configuration. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -349,10 +493,24 @@
                                 if (this.user_search.length >= 2)
                                 {
                                     axios.post('/api/admin/search_users', { search: this.user_search }).then(response => {
-                                        this.user_search_result = response.data.users;
-                                        if (this.user_search_result.length === 0) { this.user_not_found = true; }
-                                        else { this.user_not_found = false; }
-                                        this.user_show_results = true;
+                                        const data = response.data;
+                                        if (data.success)
+                                        {
+                                            this.user_search_result = data.users;
+                                            if (this.user_search_result.length === 0) { this.user_not_found = true; }
+                                            else { this.user_not_found = false; }
+                                            this.user_show_results = true;
+                                        }
+                                        else { throw { response: {...response} }; }
+                                    }).catch(error => {
+                                        Alpine.store('modal').open(
+                                            'Error',
+                                            'Failed to search users. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                            null,
+                                            'OK',
+                                            'Cancel',
+                                            'bg-rose-600 hover:bg-rose-700'
+                                        );
                                     });
                                 } else {
                                     this.user_search_result = [];
@@ -375,17 +533,22 @@
                             },
                             get_user_data(user_id) {
                                 axios.post('/api/admin/user_data', { id: user_id }).then(response => {
-                                    this.user_data = response.data.user;
-                                    this.user_reservations = response.data.reservations.map(reservation => ({
-                                        ...reservation,
-                                        start_full: new Date(`${reservation.start_date} ${reservation.start_time}`),
-                                        end_full: new Date(`${reservation.end_date} ${reservation.end_time}`)
-                                    }));
-                                    this.sort_user_reservations();
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.user_data = data.user;
+                                        this.user_reservations = data.reservations.map(reservation => ({
+                                            ...reservation,
+                                            start_full: new Date(`${reservation.start_date} ${reservation.start_time}`),
+                                            end_full: new Date(`${reservation.end_date} ${reservation.end_time}`)
+                                        }));
+                                        this.sort_user_reservations();
+                                    }
+                                    else { throw { response: {...response} }; }
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to get user data. Server error.',
+                                        'Failed to get user data. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
@@ -478,14 +641,27 @@
                                 this.reservations_loaded = false;
                                 this.reservations_error = false;
                                 axios.post('/api/admin/reservations', { date: this.date }).then(response => {
-                                    this.reservations = response.data.reservations.map(reservation => ({
-                                        ...reservation,
-                                        start_full: new Date(`${reservation.start_date} ${reservation.start_time}`),
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.reservations = data.reservations.map(reservation => ({
+                                            ...reservation,
+                                            start_full: new Date(`${reservation.start_date} ${reservation.start_time}`),
                                         end_full: new Date(`${reservation.end_date} ${reservation.end_time}`)
-                                    }));
-                                    this.tables = response.data.tables;
-                                    this.reservations_loaded = true;
+                                        }));
+                                        this.tables = data.tables;
+                                        this.reservations_loaded = true;
+                                    }
+                                    else { this.reservations_error = true; throw { response: {...response} }; }
                                 }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to get reservations. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
                                     this.reservations_error = true;
                                 }).finally(() => {
                                     this.reservations_loading = false;
@@ -509,10 +685,11 @@
                                                     this.sort_user_reservations();
                                                 }
                                             }
+                                            else { throw { response: {...response} }; }
                                         }).catch(error => {
                                             Alpine.store('modal').open(
                                                 'Error',
-                                                'Failed to cancel reservation. Please try refreshing the page. Server error.',
+                                                'Failed to cancel reservation. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                                 null,
                                                 'OK',
                                                 'Cancel',
@@ -533,7 +710,8 @@
                                         note = Alpine.store('modal').input;
                                         if (!note) { note = null; }
                                         axios.post('/api/admin/reservation_note', { id: reservation_id, note: note }).then(response => {
-                                            if (response.data.success)
+                                            const data = response.data;
+                                            if (data.success)
                                             {
                                                 //update note in reservations
                                                 const reservation = this.reservations.find(r => r.id === reservation_id);
@@ -543,10 +721,11 @@
                                                 const user_reservation = this.user_reservations.find(r => r.id === reservation_id);
                                                 if (user_reservation) { user_reservation.note = note; }
                                             }
+                                            else { throw { response: {...response} }; }
                                         }).catch(error => {
                                             Alpine.store('modal').open(
                                                 'Error',
-                                                'Failed to edit note. Please try refreshing the page. Server error.',
+                                                'Failed to edit note. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                                 null,
                                                 'OK',
                                                 'Cancel',
@@ -569,16 +748,18 @@
                                         note = Alpine.store('modal').input;
                                         if (!note) { note = null; }
                                         axios.post('/api/admin/user_note', { id: user_id, note: note }).then(response => {
-                                            if (response.data.success)
+                                            const data = response.data;
+                                            if (data.success)
                                             {
                                                 //update note in user
                                                 const user = this.user_data;
                                                 if (user) { user.note = note; }
                                             }
+                                            else { throw { response: {...response} }; }
                                         }).catch(error => {
                                             Alpine.store('modal').open(
                                                 'Error',
-                                                'Failed to edit note. Please try refreshing the page. Server error.',
+                                                'Failed to edit note. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
                                                 null,
                                                 'OK',
                                                 'Cancel',
@@ -592,6 +773,49 @@
                                     true,
                                     note
                                 );
+                            },
+
+                            new_duration: null,
+                            create_duration(duration) {
+                                axios.post('/api/admin/create_duration', { duration: duration }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.durations.push(duration);
+                                        this.durations.sort((a, b) => a - b);
+                                    }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to create duration. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                }).finally(() => {
+                                    this.new_duration = null;
+                                });
+                            },
+                            delete_duration(duration) {
+                                axios.post('/api/admin/delete_duration', { duration: duration }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.durations = this.durations.filter(d => d !== duration);
+                                    }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to delete duration. ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                });
                             },
 
                             //helpers

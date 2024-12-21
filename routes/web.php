@@ -112,23 +112,59 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => true]);
         });
 
+        Route::post('/api/admin/create_duration', function (Request $request) {
+            $request->validate([
+                'duration' => 'required|decimal:0,1|min:0.5'
+            ]);
+
+            //we allow only half hours
+            $duration = floatval($request->duration);
+            $decimal = $duration - floor($duration);
+            if ($decimal != 0 && $decimal != 0.5)
+            {
+                return response()->json(['success' => false, 'message' => 'Duration decimal part must be either 0 or 0.5.'], 422);
+            }
+
+            $durations = json_decode(RestaurantConfig::where('name', 'durations')->first()->value);
+            if (in_array($duration, $durations))
+            {
+                return response()->json(['success' => false, 'message' => 'Duration already exists.'], 422);
+            }
+            $durations[] = $duration;
+            sort($durations);
+            RestaurantConfig::where('name', 'durations')->update(['value' => $durations]);
+            return response()->json(['success' => true]);
+        });
+        Route::post('/api/admin/delete_duration', function (Request $request) {
+            $request->validate([
+                'duration' => 'required|decimal:0,1|min:0.5'
+            ]);
+
+            $durations = json_decode(RestaurantConfig::where('name', 'durations')->first()->value);
+            $durations = array_values(array_diff($durations, [$request->duration]));
+            RestaurantConfig::where('name', 'durations')->update(['value' => $durations]);
+            return response()->json(['success' => true]);
+        });
+
         Route::post('/api/admin/config', function (Request $request) {            
             //get restaurant configuration
             $config = RestaurantConfig::all()->pluck('value', 'name');
             $timezone = $config['timezone'];
-
+            $durations = json_decode($config['durations']);
             //get opening hours
             $opening_hours = OpeningHours::all();
 
             //process opening hours
             $regular_hours = [];
             $custom_hours = [];
+            $closing_dates = [];
             foreach ($opening_hours as $entry)
             {
                 //specific dates
                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $entry->day))
                 {
-                    if (!$entry->closed)
+                    if ($entry->closed) { $closing_dates[] = $entry->day; }
+                    else
                     {
                         $custom_hours[$entry->day] = [
                             'open' => $entry->open,
@@ -143,6 +179,7 @@ Route::middleware('auth')->group(function () {
                     $day_number = array_search($entry->day, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
                     if ($day_number !== false)
                     {
+                        if ($entry->closed) { $closing_dates[] = $entry->day; }
                         $regular_hours[$day_number] = [
                             'open' => $entry->open,
                             'close' => $entry->close,
@@ -156,7 +193,9 @@ Route::middleware('auth')->group(function () {
                 'success' => true,
                 'timezone' => $timezone,
                 'opening_hours' => $regular_hours,
-                'custom_opening_hours' => $custom_hours
+                'custom_opening_hours' => $custom_hours,
+                'closing_dates' => $closing_dates,
+                'durations' => $durations
             ]);
         });
     });
@@ -280,6 +319,7 @@ Route::post('/api/restaurant_data', function () {
     $durations = json_decode($config['durations']);
     $max_days_in_advance = intval($config['max_days_in_advance']);
     $max_future_reservations = intval($config['max_future_reservations']);
+    $min_hours_before_reservation = intval($config['min_hours_before_reservation']);
     $timezone = $config['timezone'];
 
     return response()->json([
@@ -293,6 +333,7 @@ Route::post('/api/restaurant_data', function () {
         'durations' => $durations,
         'max_days_in_advance' => $max_days_in_advance,
         'max_future_reservations' => $max_future_reservations,
+        'min_hours_before_reservation' => $min_hours_before_reservation,
         'timezone' => $timezone
     ]);
 });
@@ -301,7 +342,7 @@ Route::post('/api/restaurant_data', function () {
 Route::post('/api/create_reservation', function (Request $request) {
     //must be authenticated
     $user = auth()->user();
-    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
+    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
 
     //get restaurant configuration
     $config = RestaurantConfig::all()->pluck('value', 'name');
@@ -317,7 +358,7 @@ Route::post('/api/create_reservation', function (Request $request) {
     $request->validate([
         'date' => 'required|date|after_or_equal:'.$today->format('Y-m-d').'|before_or_equal:'.$max_date->format('Y-m-d'),
         'time' => 'required|date_format:H:i',
-        'duration' => 'required|numeric|in:'.implode(',', $durations),
+        'duration' => 'required|decimal:0,1|in:'.implode(',', $durations),
         'table_id' => 'required|exists:tables,id',
         'user_id' => 'sometimes|required|exists:users,id'
     ]);
@@ -367,17 +408,17 @@ Route::post('/api/create_reservation', function (Request $request) {
         //E > NS && E <= NE
         if ($end > $new_start && $end <= $new_end)
         {
-            return response()->json(['success' => false, 'message' => 'Table is not available at requested time'], 422);
+            return response()->json(['success' => false, 'message' => 'Table is not available at requested time.'], 422);
         }
         //S >= NS && S < NE
         else if ($start >= $new_start && $start < $new_end)
         {
-            return response()->json(['success' => false, 'message' => 'Table is not available at requested time'], 422);
+            return response()->json(['success' => false, 'message' => 'Table is not available at requested time.'], 422);
         }
         //S <= NS && E >= NE
         else if ($start <= $new_start && $end >= $new_end)
         {
-            return response()->json(['success' => false, 'message' => 'Table is not available at requested time'], 422);
+            return response()->json(['success' => false, 'message' => 'Table is not available at requested time.'], 422);
         }
     }
 
@@ -385,15 +426,15 @@ Route::post('/api/create_reservation', function (Request $request) {
     if ($request->user_id)
     {
         $for_user = User::find($request->user_id);
-        if (!$for_user) { return response()->json(['success' => false, 'message' => 'User not found'], 404); }
-        if (!$user->employee && $for_user->id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
+        if (!$for_user) { return response()->json(['success' => false, 'message' => 'User not found.'], 404); }
+        if (!$user->employee && $for_user->id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
     }
 
     //check if user has too many future reservations (unless employee)
     if (!$user->employee)
     {
         $future_reservations = Reservation::where('user_id', $user->id)->where('start_date', '>', $today->format('Y-m-d'))->where('start_time', '>', $today->format('H:i'))->count();
-        if ($future_reservations >= $max_future_reservations) { return response()->json(['success' => false, 'message' => 'Maximum amount of reservations reached'], 422); }
+        if ($future_reservations >= $max_future_reservations) { return response()->json(['success' => false, 'message' => 'Maximum amount of reservations reached.'], 422); }
     }
 
     //create reservation
@@ -413,7 +454,7 @@ Route::post('/api/create_reservation', function (Request $request) {
 Route::post('/api/delete_reservation', function (Request $request) {
     //must be authenticated
     $user = auth()->user();
-    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
+    if (!$user) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
 
     //validate request data
     $request->validate([
@@ -422,10 +463,10 @@ Route::post('/api/delete_reservation', function (Request $request) {
 
     //get reservation
     $reservation = Reservation::find($request->id);
-    if (!$reservation) { return response()->json(['success' => false, 'message' => 'Reservation not found'], 404); }
+    if (!$reservation) { return response()->json(['success' => false, 'message' => 'Reservation not found.'], 404); }
 
     //check if reservation belongs to user or is employee
-    if (!$user->employee && $reservation->user_id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized'], 401); }
+    if (!$user->employee && $reservation->user_id !== $user->id) { return response()->json(['success' => false, 'message' => 'Unauthorized.'], 401); }
 
     //delete reservation
     $reservation->delete();
