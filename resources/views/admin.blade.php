@@ -69,6 +69,7 @@
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Name</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Table</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Warnings</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Note</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
                                                 </tr>
                                             </thead>
@@ -84,7 +85,9 @@
                                                         <td class="px-6 py-4 whitespace-nowrap" x-text="reservation.user.name"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap" x-text="(reservation.table.name ?? ('Table ' + reservation.table_id)) + ' (' + reservation.seats + ' seats)'"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap text-yellow-500" x-text="reservation.seats !== reservation.table.seats ? 'Table has only ' + reservation.table.seats + ' seats' : ''"></td>
-                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="reservation.note"></td>
+                                                        <td class="px-6 py-4 whitespace-nowrap flex flex-col">
+                                                            <button @click="edit_note(reservation.id, reservation.note)" class="text-zinc-600 hover:text-zinc-800">Edit Note</button>
                                                             <button @click="cancel_reservation(reservation.id)" class="text-rose-500 hover:text-rose-700">Cancel</button>
                                                         </td>
                                                     </tr>
@@ -202,7 +205,19 @@
                                                                     </svg>
                                                                     <span x-text="'Duration: ' + parse_duration(reservation.duration)"></span>
                                                                 </span>
-                                                                <div class="mt-2">
+                                                                <span x-cloak x-show="reservation.note" class="flex flex-row items-center gap-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                                                    </svg>
+                                                                    <span x-text="'Note: ' + reservation.note"></span>
+                                                                </span>
+                                                                <div class="mt-2 flex flex-col gap-y-1">
+                                                                    <button @click="edit_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                                        </svg>
+                                                                        Edit Note
+                                                                    </button>
                                                                     <button @click="cancel_reservation(reservation.id)" class="text-sm font-semibold text-rose-600 hover:text-rose-700 flex flex-row items-center gap-1">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -229,7 +244,7 @@
                                                         <p class="text-zinc-600">No past reservations found.</p>
                                                     </div>
                                                     <template x-for="reservation in user_reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone})))" :key="reservation.id">
-                                                        <div class="p-4 border rounded opacity-75">
+                                                        <div class="p-4 border rounded">
                                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                                             <p class="text-sm text-zinc-600">
                                                                 <span class="flex flex-row items-center gap-1">
@@ -256,6 +271,20 @@
                                                                     </svg>
                                                                     <span x-text="'Duration: ' + parse_duration(reservation.duration)"></span>
                                                                 </span>
+                                                                <span x-cloak x-show="reservation.note" class="flex flex-row items-center gap-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                                                    </svg>
+                                                                    <span x-text="'Note: ' + reservation.note"></span>
+                                                                </span>
+                                                                <div class="mt-2 flex flex-col gap-y-1">
+                                                                    <button @click="edit_note(reservation.id, reservation.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                                        </svg>
+                                                                        Edit Note
+                                                                    </button>
+                                                                </div>
                                                             </p>
                                                         </div>
                                                     </template>
@@ -289,7 +318,7 @@
                                 }).catch(error => {
                                     Alpine.store('modal').open(
                                         'Error',
-                                        'Failed to get user data. Server error.',
+                                        'Failed to get restaurant configuration. Server error.',
                                         null,
                                         'OK',
                                         'Cancel',
@@ -487,6 +516,42 @@
                                     'Confirm',
                                     'Cancel',
                                     'bg-rose-600 hover:bg-rose-700'
+                                );
+                            },
+                            edit_note(reservation_id, note) {
+                                Alpine.store('modal').open(
+                                    'Edit Note',
+                                    'Enter the new note for this reservation.',
+                                    () => {
+                                        note = Alpine.store('modal').input;
+                                        if (!note) { note = null; }
+                                        axios.post('/api/admin/note', { id: reservation_id, note: note }).then(response => {
+                                            if (response.data.success)
+                                            {
+                                                //update note in reservations
+                                                const reservation = this.reservations.find(r => r.id === reservation_id);
+                                                if (reservation) { reservation.note = note; }
+
+                                                //update note in user_reservations 
+                                                const user_reservation = this.user_reservations.find(r => r.id === reservation_id);
+                                                if (user_reservation) { user_reservation.note = note; }
+                                            }
+                                        }).catch(error => {
+                                            Alpine.store('modal').open(
+                                                'Error',
+                                                'Failed to edit note. Please try refreshing the page. Server error.',
+                                                null,
+                                                'OK',
+                                                'Cancel',
+                                                'bg-rose-600 hover:bg-rose-700'
+                                            );
+                                        });
+                                    },
+                                    'Save',
+                                    'Cancel',
+                                    'bg-zinc-700 hover:bg-zinc-800',
+                                    true,
+                                    note
                                 );
                             },
 

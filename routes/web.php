@@ -61,6 +61,11 @@ Route::middleware('auth')->group(function () {
 
             $user = User::find($request->id);
             $reservations = Reservation::where('user_id', $user->id)->with('table')->get();
+            foreach ($reservations as $reservation)
+            {
+                $note = DB::table('reservation_notes')->where('reservation_id', $reservation->id)->first();
+                $reservation->note = $note ? $note->note : null;
+            }
             return response()->json(['success' => true, 'user' => $user, 'reservations' => $reservations]);
         });
 
@@ -69,9 +74,27 @@ Route::middleware('auth')->group(function () {
                 'date' => 'required|date'
             ]);
 
-            $reservations = Reservation::where('start_date', $request->date)->orWhere('end_date', $request->date)->with('table', 'user')->get();
+            $reservations = Reservation::where('start_date', $request->date)->orWhere('end_date', $request->date)->with('table', 'user')->get();            
+            foreach ($reservations as $reservation)
+            {
+                $note = DB::table('reservation_notes')->where('reservation_id', $reservation->id)->first();
+                $reservation->note = $note ? $note->note : null;
+            }
             $tables = Table::all();
             return response()->json(['success' => true, 'reservations' => $reservations, 'tables' => $tables]);
+        });
+
+        Route::post('/api/admin/note', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:reservations,id',
+                'note' => 'nullable|string|max:256'
+            ]);
+
+            //if reservation has note, update it (if null, delete it) otherwise create it
+            if ($request->note === null) { DB::table('reservation_notes')->where('reservation_id', $request->id)->delete(); }
+            else { DB::table('reservation_notes')->updateOrInsert(['reservation_id' => $request->id], ['note' => $request->note]); }
+            
+            return response()->json(['success' => true]);
         });
 
         Route::post('/api/admin/config', function (Request $request) {            

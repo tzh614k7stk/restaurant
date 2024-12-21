@@ -212,7 +212,7 @@
                                 
                                 <div x-show="show_past" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
                                     <template x-for="reservation_id in user_reservations.filter(id => { const reservation = reservations.find(r => r.id === id); return new Date(reservation.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone})); })" :key="reservation_id">
-                                        <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded opacity-75">
+                                        <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                             <p class="text-sm text-zinc-600">
                                                 <span class="flex flex-row items-center gap-1">
@@ -705,7 +705,6 @@
                                         );
                                     }
                                 }).catch(error => {
-                                    console.log(error);
                                     Alpine.store('modal').open(
                                         'Error',
                                         (error.response && error.response.status === 401) ? 'You must be logged in to make a reservation.' : 'Failed to create reservation. Please try refreshing the page. Server error.',
