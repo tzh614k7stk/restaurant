@@ -30,6 +30,7 @@
 
                 <!-- reservation system -->
                 <div x-init="get_restaurant_data()" x-data="reservation_system()" class="max-w-6xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 gap-y-8">
+                    <!-- only show reservation form after data is loaded -->
                     <template x-cloak x-if="first_load">
                         <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8">
                             <div class="flex items-center gap-2 mb-6">
@@ -39,11 +40,12 @@
                                 </svg>
                             </div>
                             
-                            <!-- employee user selection -->
+                            <!-- make reservation on behalf of user - only shown to employees -->
                             @auth
                             @if (Auth::user()->employee)
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1 flex flex-row items-center gap-x-2">Select User
+                                    <!-- show selected user info with clear button -->
                                     <template x-cloak x-if="selected_user">
                                         <div class="flex flex-row items-center font-normal">
                                             <p class="text-zinc-600">(selected user: <span class="text-rose-400" x-text="selected_user.name"></span>)</p>
@@ -57,20 +59,20 @@
                                     </template>
                                 </label>
                                 <div class="relative">
-                                    <!-- search input -->
+                                    <!-- search input with live results -->
                                     <input type="text" x-model="user_search"
                                         @input="search_users"
                                         @click="search_users"
                                         @click.away="user_show_results = false"
                                         placeholder="Search user by name..."
                                         class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                                    <!-- search results -->
+                                    <!-- dropdown with search results -->
                                     <div x-show="user_show_results" x-cloak class="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                        <!-- not found -->
+                                        <!-- show message when no users found -->
                                         <div x-cloak x-show="user_not_found" class="px-4 py-2 cursor-pointer hover:bg-gray-100">
                                             <p class="text-zinc-600">No users found.</p>
                                         </div>
-                                        <!-- search results -->
+                                        <!-- list of found users -->
                                         <template x-for="user in user_search_result" :key="user.id">
                                             <div @click="select_user(user)"
                                                 class="px-4 py-2 cursor-pointer hover:bg-gray-100"
@@ -82,12 +84,14 @@
                             </div>
                             @endif
                             @endauth
-                            <!-- date selection -->
+
+                            <!-- date selection with min/max date validation -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Date</label>
                                 <input type="date" :min="min_day" :max="max_day" x-model="selected_date" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
                             </div>
-                            <!-- time selection -->
+
+                            <!-- time selection based on opening hours -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Time</label>
                                 <select x-model="selected_time" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
@@ -97,7 +101,8 @@
                                     </template>
                                 </select>
                             </div>
-                            <!-- duration selection -->
+
+                            <!-- duration selection based on closing time -->
                             <div class="mb-6">
                                 <label class="block text-zinc-700 text-sm font-bold mb-1">Select Duration</label>
                                 <select x-model="duration" @change="if (!available_tables.find(t => t.id === selected_table)) { selected_table = null; }" class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
@@ -107,7 +112,8 @@
                                     </template>
                                 </select>
                             </div>
-                            <!-- table selection -->
+
+                            <!-- table selection - only shown when date/time/duration are valid -->
                             <div x-cloak x-show="is_form_valid(false)" class="mb-6">
                                 <div x-cloak x-show="available_tables.length > 0">
                                     <label class="block text-zinc-700 text-sm font-bold mb-1">Select Table</label>
@@ -126,21 +132,25 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- errors -->
+
+                            <!-- validation error messages -->
                             <div class="mb-6">
+                                <!-- show when no tables available for selected time slot -->
                                 <div x-cloak x-show="is_form_valid(false) && available_tables.length === 0">
                                     <p class="text-rose-700 text-sm font-bold mb-1">No tables available on this day for the selected time and duration.</p>
                                 </div>
+                                <!-- show when selected date is a closing date -->
                                 <div x-cloak x-show="closing_dates.includes(selected_date) || closing_dates.includes(new Date(selected_date).toLocaleDateString('en-US', {weekday: 'long'}))">
                                     <p class="text-rose-700 text-sm font-bold mb-1">We are closed on this date.</p>
                                 </div>
                             </div>
-                            <!-- submit button -->
+
+                            <!-- submit button - disabled when form invalid -->
                             <button @click="submit_reservation" :class="is_form_valid(true) ? 'bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950' : 'bg-zinc-500 opacity-50'" class="text-white font-bold rounded py-2 px-3 focus:outline-none">Make Reservation</button>
                         </div>
                     </template>
 
-                    <!-- user reservations -->
+                    <!-- user reservations - only shown to logged in users -->
                     @auth
                     <div x-cloak x-show="user_reservations.length > 0" class="bg-white overflow-hidden shadow-md rounded-lg">
                         <div class="flex flex-col gap-y-6 px-6 py-8">
@@ -150,12 +160,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                                 </svg>
                             </div>
-                            <!-- future reservations -->
+
+                            <!-- grid of future reservations -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
-                                <div x-cloak x-show="user_reservations.filter(id => { const reservation = reservations.find(r => r.id === id); return new Date(reservation.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: timezone})); }).length === 0" class="col-span-full">
+                                <!-- show message when no upcoming reservations -->
+                                <div x-cloak x-show="get_future_reservations(user_reservations).length === 0" class="col-span-full">
                                     <p class="text-zinc-600">You have no upcoming reservations.</p>
                                 </div>
-                                <template x-for="reservation_id in user_reservations.filter(id => { const reservation = reservations.find(r => r.id === id); return new Date(reservation.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: timezone})); })" :key="reservation_id">
+                                <!-- list of upcoming reservations -->
+                                <template x-for="reservation_id in get_future_reservations(user_reservations)" :key="reservation_id">
                                     <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
                                         <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                         <p class="text-sm text-zinc-600">
@@ -169,7 +182,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                 </svg>
-                                                <span x-text="'Date: ' + style_date(reservation.start_full)"></span>
+                                                <span x-text="'Date: ' + style_human_date(reservation.start_full)"></span>
                                             </span>
                                             <span class="flex flex-row items-center gap-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -184,13 +197,15 @@
                                                 <span x-text="'Duration: ' + parse_duration(reservation.duration)"></span>
                                             </span>
                                             <div class="mt-2 flex flex-col gap-y-1">
+                                                <!-- add to Google Calendar button -->
                                                 <button @click="add_to_google_calendar(reservation.id)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                                                     </svg>
                                                     Add to Google Calendar
                                                 </button>
-                                                <button @click="$store.modal.open('Cancel Reservation', 'Are you sure you want to cancel this reservation?', () => cancel_reservation(reservation.id), 'Yes, cancel it', 'No, keep it', 'bg-rose-600 hover:bg-rose-700')" class="text-sm font-semibold text-rose-600 hover:text-rose-700 flex flex-row items-center gap-1">
+                                                <!-- cancel reservation button with confirmation modal -->
+                                                <button @click="show_modal('Are you sure you want to cancel this reservation?', {action: () => cancel_reservation(reservation.id), confirm_text: 'Yes, cancel it', cancel_text: 'No, keep it', yes_class: 'bg-rose-600 hover:bg-rose-700' })" class="text-sm font-semibold text-rose-600 hover:text-rose-700 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                     </svg>
@@ -201,8 +216,9 @@
                                     </div>
                                 </template>
                             </div>
-                            <!-- past reservations -->
-                            <div x-cloak x-show="user_reservations.filter(id => { const reservation = reservations.find(r => r.id === id); return new Date(reservation.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone})); }).length > 0" x-data="{ show_past: false }" class="flex flex-col gap-4">
+
+                            <!-- past reservations with collapsible content -->
+                            <div x-cloak x-show="get_past_reservations(user_reservations).length > 0" x-data="{ show_past: false }" class="flex flex-col gap-4">
                                 <button @click="show_past = !show_past" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': show_past }">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -210,8 +226,9 @@
                                     <span x-text="show_past ? 'Hide Past Reservations' : 'Show Past Reservations'"></span>
                                 </button>
                                 
+                                <!-- grid of past reservations -->
                                 <div x-show="show_past" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
-                                    <template x-for="reservation_id in user_reservations.filter(id => { const reservation = reservations.find(r => r.id === id); return new Date(reservation.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone})); })" :key="reservation_id">
+                                    <template x-for="reservation_id in get_past_reservations(user_reservations)" :key="reservation_id">
                                         <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                             <p class="text-sm text-zinc-600">
@@ -225,7 +242,7 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                     </svg>
-                                                    <span x-text="'Date: ' + style_date(reservation.start_full)"></span>
+                                                    <span x-text="'Date: ' + style_human_date(reservation.start_full)"></span>
                                                 </span>
                                                 <span class="flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -246,25 +263,29 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- user info -->
                     <div x-cloak x-show="first_load" class="bg-white overflow-hidden shadow-md rounded-lg">
                         <div class="flex flex-col gap-y-6 px-6 py-8">
                             <div class="flex flex-col items-start">
+                                <!-- user name -->
                                 <p class="flex items-center text-lg text-zinc-700 border-b border-zinc-400 mb-2 pr-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                                     </svg>
                                     {{ Auth::user()->name }}
                                 </p>
+                                <!-- user details -->
                                 <p class="text-zinc-700 text-sm">
                                     <i class="text-zinc-500 pr-1">email:</i> <a>{{ Auth::user()->email }}</a>
                                 </p>
                                 <p class="text-zinc-700 text-sm">
-                                    <i class="text-zinc-500 pr-1">member since:</i> <a x-text="style_date(new Date('{{ Auth::user()->created_at }}'))"></a>
+                                    <i class="text-zinc-500 pr-1">member since:</i> <a x-text="style_human_date(new Date('{{ Auth::user()->created_at }}'))"></a>
                                 </p>
                                 <p class="text-zinc-700 text-sm">
                                     <i class="text-zinc-500 pr-1">number of reservations:</i> <a x-text="user_reservations.length"></a>
                                 </p>
+                                <!-- logout form -->
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="flex items-center text-lg text-zinc-700 hover:text-zinc-800 border-t border-zinc-400 mt-2 pr-2">
@@ -279,6 +300,7 @@
                     </div>
                     @endauth
                     @guest
+                    <!-- login/register options for guests -->
                     <div class="bg-white overflow-hidden shadow-md rounded-lg">
                         <div class="px-6 py-8">
                             <div class="flex justify-center items-center gap-6">
@@ -357,14 +379,14 @@
                             get min_day() {
                                 let date = new Date().toLocaleString(undefined, {timeZone: this.timezone});
                                 date = new Date(date);
-                                return this.style_html_date(date); //yyyy-mm-dd
+                                return style_html_date(date); //yyyy-mm-dd
                             },
                             get max_day() {
                                 let date = new Date().toLocaleString(undefined, {timeZone: this.timezone});
                                 date = new Date(date);
                                 date.setHours(0, 0, 0, 0); //matching php max_day calculation
                                 date.setDate(date.getDate() + this.max_days_in_advance);
-                                return this.style_html_date(date); //yyyy-mm-dd
+                                return style_html_date(date); //yyyy-mm-dd
                             },
 
                             //employee selection
@@ -526,17 +548,6 @@
                             },
 
                             //helpers
-                            style_date(dt) { return dt.getDate().toString().padStart(2, '0') + '-' + (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getFullYear(); },
-                            style_time(dt) { return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0'); },
-                            style_html_date(dt) { return dt.getFullYear() + '-' + (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getDate().toString().padStart(2, '0'); },
-                            parse_duration(duration) {
-                                let result = '';
-                                let hours = Math.floor(duration);
-                                let minutes = Math.floor((duration - hours) * 60);
-                                if (hours > 0) { result += hours + ' hour' + (hours > 1 ? 's' : ''); }
-                                if (minutes > 0) { result += ' ' + minutes + ' minutes'; }
-                                return result;
-                            },
                             sort_user_reservations() {
                                 //sort user reservations by date and time
                                 this.user_reservations.sort((a, b) => {
@@ -551,7 +562,7 @@
                                     //but we use still the previous date so it is tied to the previous date opening hours
                                     //so we need to check if the reservation should be on the next date and if so, we use the next date
                                     //find out by getting the opening hours
-                                    const custom_hours = this.custom_opening_hours[this.style_html_date(dateA)];
+                                    const custom_hours = this.custom_opening_hours[style_html_date(dateA)];
                                     const day = dateA.getDay();
                                     const { close } = custom_hours || this.opening_hours[day];
                                     const { open } = custom_hours || this.opening_hours[day];
@@ -634,6 +645,12 @@
                                        this.selected_time && 
                                        this.duration && 
                                        (with_table ? this.selected_table : true);
+                            },
+                            get_future_reservations(reservations) {
+                                return reservations.filter(r => new Date(r.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
+                            },
+                            get_past_reservations(reservations) {
+                                return reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
                             },
 
                             //form actions

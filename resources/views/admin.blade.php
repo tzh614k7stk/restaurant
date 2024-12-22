@@ -40,7 +40,7 @@
                                 </svg>
                             </div>
                             <div class="flex flex-col gap-y-4">
-                                <!-- date selector -->
+                                <!-- date selector for filtering reservations -->
                                 <div class="flex flex-row gap-2">
                                     <input x-model="date" :min="today" type="date" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
                                     <button @click="get_reservations" class="flex relative items-center gap-2 bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950 text-white font-bold rounded py-2 px-3 focus:outline-none">
@@ -50,7 +50,7 @@
                                         Update
                                     </button>
                                 </div>
-                                <!-- reservations for selected date -->
+                                <!-- loading states -->
                                 <div x-cloak x-show="reservations_loading" class="flex flex-col items-center justify-center">
                                     <p class="text-zinc-500">Loading reservations...</p>
                                 </div>
@@ -60,6 +60,7 @@
                                 <div x-cloak x-show="reservations_loaded && reservations.length === 0" class="flex flex-col items-center justify-center">
                                     <p class="text-zinc-500">No reservations found for this date.</p>
                                 </div>
+                                <!-- table with reservations for selected date -->
                                 <template x-if="reservations_loaded && reservations.length > 0">
                                     <div class="overflow-auto">
                                         <table class="min-w-full divide-y divide-zinc-200">
@@ -75,6 +76,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-zinc-200">
+                                                <!-- reservation sorted by status -->
                                                 <template x-for="(reservation, index) in sorted_reservations" :key="reservation.id">
                                                     <tr class="hover:bg-zinc-200" :class="{ 
                                                         'bg-white': reservation.status === 'upcoming',
@@ -113,6 +115,7 @@
                             <div class="flex flex-col gap-y-4 min-h-80">
                                 <!-- user selection -->
                                 <div class="flex flex-col">
+                                    <!-- label with selected user info -->
                                     <label class="block text-zinc-700 text-sm font-bold mb-1 flex flex-row items-center gap-x-2">Select User
                                         <template x-cloak x-if="selected_user">
                                             <div class="flex flex-row items-center font-normal">
@@ -126,6 +129,7 @@
                                             </div>
                                         </template>
                                     </label>
+                                    <!-- search input with dropdown results -->
                                     <div class="relative">
                                         <!-- search input -->
                                         <input type="text" x-model="user_search"
@@ -134,13 +138,13 @@
                                             @click.away="user_show_results = false"
                                             placeholder="Search user by name..."
                                             class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                                        <!-- search results -->
+                                        <!-- dropdown with search results -->
                                         <div x-show="user_show_results" x-cloak class="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                            <!-- not found -->
+                                            <!-- no results found message -->
                                             <div x-cloak x-show="user_not_found" class="px-4 py-2 cursor-pointer hover:bg-gray-100">
                                                 <p class="text-zinc-600">No users found.</p>
                                             </div>
-                                            <!-- search results -->
+                                            <!-- list of found users -->
                                             <template x-for="user in user_search_result" :key="user.id">
                                                 <div @click="select_user(user)"
                                                     class="px-4 py-2 cursor-pointer hover:bg-gray-100"
@@ -155,20 +159,23 @@
                                     <template x-cloak x-if="user_data">
                                         <div class="flex flex-col">
                                             <label class="block text-zinc-700 text-sm font-bold mb-1 flex flex-row items-center gap-x-2">User Data</label>
+                                            <!-- user details display -->
                                             <div class="flex flex-col">
                                                 <p class="text-zinc-600">Name: <span class="text-zinc-700" x-text="user_data.name"></span></p>
                                                 <p class="text-zinc-600">Employee: <span class="text-zinc-700" x-text="user_data.employee ? 'Yes' : 'No'"></span></p>
                                                 <p class="text-zinc-600">Email: <span class="text-zinc-700" x-text="user_data.email"></span></p>
-                                                <p class="text-zinc-600">Member since: <span class="text-zinc-700" x-text="style_date(new Date(user_data.created_at)) + ' ' + style_time(new Date(user_data.created_at))"></span></p>
+                                                <p class="text-zinc-600">Member since: <span class="text-zinc-700" x-text="style_human_date(new Date(user_data.created_at)) + ' ' + style_time(new Date(user_data.created_at))"></span></p>
                                                 <p class="text-zinc-600">Reservation Limit: <span class="text-zinc-700" x-text="user_data.max_future_reservations !== null ? (user_data.max_future_reservations !== 0 ? user_data.max_future_reservations : 'Blocked') : max_future_reservations"></span></p>
                                                 <p x-cloak x-show="user_data.note" class="text-zinc-600">Note: <span class="text-zinc-700" x-text="user_data.note"></span></p>
                                             </div>
+                                            <!-- user action buttons -->
                                             <button @click="edit_user_note(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                 </svg>
                                                 Edit Note
                                             </button>
+                                            <!-- conditional buttons based on user status -->
                                             <div x-cloak x-show="user_data.max_future_reservations !== 0" class="flex flex-col">
                                                 <button @click="set_max_future_reservations_with_input(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -183,6 +190,7 @@
                                                     Block User
                                                 </button>
                                             </div>
+                                            <!-- unblock button for blocked users -->
                                             <div x-cloak x-show="user_data.max_future_reservations === 0" class="flex flex-col">
                                                 <button @click="set_max_future_reservations(user_data.id, null)" class="text-sm font-semibold text-green-300 hover:text-green-400 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -196,7 +204,7 @@
                                     <!-- user reservations -->
                                     <template x-cloak x-if="user_data">
                                         <div class="flex flex-col gap-y-4">
-                                            <!-- future reservations -->
+                                            <!-- future reservations collapsible section -->
                                             <div x-data="{ show_future: false }" class="flex flex-col gap-4">
                                                 <button @click="show_future = !show_future" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': show_future }">
@@ -205,11 +213,12 @@
                                                     <span x-text="show_future ? 'Hide Future Reservations' : 'Show Future Reservations'"></span>
                                                 </button>
                                                 
+                                                <!-- grid of future reservations -->
                                                 <div x-show="show_future" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    <div x-cloak x-show="user_reservations.filter(r => new Date(r.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: timezone}))).length === 0">
+                                                    <div x-cloak x-show="get_future_reservations(user_reservations).length === 0">
                                                         <p class="text-zinc-600">No upcoming reservations found.</p>
                                                     </div>
-                                                    <template x-for="reservation in user_reservations.filter(r => new Date(r.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: timezone})))" :key="reservation.id">
+                                                    <template x-for="reservation in get_future_reservations(user_reservations)" :key="reservation.id">
                                                         <div class="p-4 border rounded">
                                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                                             <p class="text-sm text-zinc-600">
@@ -223,7 +232,7 @@
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                                     </svg>
-                                                                    <span x-text="'Date: ' + style_date(reservation.start_full)"></span>
+                                                                    <span x-text="'Date: ' + style_human_date(reservation.start_full)"></span>
                                                                 </span>
                                                                 <span class="flex flex-row items-center gap-1">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -262,7 +271,7 @@
                                                     </template>
                                                 </div>
                                             </div>
-                                            <!-- past reservations -->
+                                            <!-- past reservations collapsible section -->
                                             <div x-data="{ show_past: false }" class="flex flex-col gap-4">
                                                 <button @click="show_past = !show_past" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': show_past }">
@@ -271,11 +280,12 @@
                                                     <span x-text="show_past ? 'Hide Past Reservations' : 'Show Past Reservations'"></span>
                                                 </button>
                                                 
+                                                <!-- grid of past reservations -->
                                                 <div x-show="show_past" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    <div x-cloak x-show="user_reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone}))).length === 0">
+                                                    <div x-cloak x-show="get_past_reservations(user_reservations).length === 0">
                                                         <p class="text-zinc-600">No past reservations found.</p>
                                                     </div>
-                                                    <template x-for="reservation in user_reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: timezone})))" :key="reservation.id">
+                                                    <template x-for="reservation in get_past_reservations(user_reservations)" :key="reservation.id">
                                                         <div class="p-4 border rounded">
                                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                                             <p class="text-sm text-zinc-600">
@@ -289,7 +299,7 @@
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                                     </svg>
-                                                                    <span x-text="'Date: ' + style_date(reservation.start_full)"></span>
+                                                                    <span x-text="'Date: ' + style_human_date(reservation.start_full)"></span>
                                                                 </span>
                                                                 <span class="flex flex-row items-center gap-1">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -351,21 +361,25 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-zinc-200">
+                                        <!-- loop through days of week -->
                                         <template x-for="(day_name, index) in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']" :key="index">
                                             <tr class="hover:bg-zinc-100">
                                                 <td class="px-6 py-4 whitespace-nowrap" x-text="day_name"></td>
+                                                <!-- opening time input, hidden if day is closed -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <input type="time" 
                                                         x-model="opening_hours[(index + 1) % 7].open"
                                                         :hidden="closing_dates.includes(day_name)"
                                                         class="bg-white shadow appearance-none border rounded py-1 px-2 text-zinc-700 leading-tight focus:outline-none">
                                                 </td>
+                                                <!-- closing time input, hidden if day is closed -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <input type="time" 
                                                         x-model="opening_hours[(index + 1) % 7].close"
                                                         :hidden="closing_dates.includes(day_name)"
                                                         class="bg-white shadow appearance-none border rounded py-1 px-2 text-zinc-700 leading-tight focus:outline-none">
                                                 </td>
+                                                <!-- toggle button for open/closed status -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <button @click="toggle_day_status((index + 1) % 7, day_name)"
                                                         class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -373,6 +387,7 @@
                                                         x-text="closing_dates.includes(day_name) ? 'Closed' : 'Open'">
                                                     </button>
                                                 </td>
+                                                <!-- save button -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <button @click="save_opening_hours((index + 1) % 7, day_name)" class="text-zinc-600 hover:text-zinc-800 hover:font-bold">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -402,12 +417,14 @@
                                 <!-- add new special hours -->
                                 <div class="flex flex-col gap-4">
                                     <div x-data="{ new_custom_hours: false }" class="flex flex-col gap-2">
+                                        <!-- toggle button for new special hours form -->
                                         <button @click="new_custom_hours = !new_custom_hours" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': new_custom_hours }">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                             </svg>
                                             Add New Custom Hours
                                         </button>
+                                        <!-- collapsible form for new special hours -->
                                         <div x-show="new_custom_hours" x-collapse class="flex flex-col gap-2 p-4 border rounded">
                                             <label class="text-sm font-semibold text-zinc-600">Date</label>
                                             <input type="date" x-model="new_special_date" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
@@ -433,10 +450,12 @@
 
                                 <!-- list of special hours -->
                                 <div class="overflow-auto">
-                                    <template x-if="Object.keys(custom_opening_hours).length === 0 && !closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
+                                    <!-- show message if no special hours -->
+                                    <template x-if="get_sorted_special_dates().length === 0">
                                         <p class="text-zinc-600">No special hours currently scheduled.</p>
                                     </template>
-                                    <template x-if="Object.keys(custom_opening_hours).length > 0 || closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
+                                    <!-- show table if special hours exist -->
+                                    <template x-if="get_sorted_special_dates().length > 0">
                                         <table class="min-w-full divide-y divide-zinc-200">
                                             <thead>
                                                 <tr>
@@ -448,9 +467,10 @@
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-zinc-200">
-                                                <template x-for="date in [...Object.keys(custom_opening_hours), ...closing_dates.filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/))].sort((a,b) => new Date(a) - new Date(b))" :key="date">
+                                                <!-- loop through special hours and closed dates -->
+                                                <template x-for="date in get_sorted_special_dates()" :key="date">
                                                     <tr class="hover:bg-zinc-100">
-                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="new Date(date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></td>
+                                                        <td class="px-6 py-4 whitespace-nowrap" x-text="style_human_date(new Date(date))"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap" x-text="date in custom_opening_hours ? custom_opening_hours[date].open : '-'"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap" x-text="date in custom_opening_hours ? custom_opening_hours[date].close : '-'"></td>
                                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -484,7 +504,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                                     </svg>
                                 </div>
-                                <!-- add new table -->
+                                <!-- collapsible form to add new table -->
                                 <div class="flex flex-col gap-4">
                                     <div x-data="{ new_table: false }" class="flex flex-col gap-2">
                                         <button @click="new_table = !new_table" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
@@ -493,6 +513,7 @@
                                             </svg>
                                             Add New Table
                                         </button>
+                                        <!-- new table input form -->
                                         <div x-show="new_table" x-collapse class="flex flex-col gap-2 p-4 border rounded">
                                             <label class="text-sm font-semibold text-zinc-600">Table Name</label>
                                             <input type="text" x-model="new_table_name" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
@@ -518,6 +539,7 @@
                                                 <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
+                                        <!-- table rows with editable inputs -->
                                         <tbody class="bg-white divide-y divide-zinc-200">
                                             <template x-for="table in tables" :key="table.id">
                                                 <tr class="hover:bg-zinc-200">
@@ -550,6 +572,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                                     </svg>
                                 </div>
+                                <!-- new duration input -->
                                 <div class="flex flex-col gap-2">
                                     <label class="text-sm font-semibold text-zinc-600">New Duration (in hours) - only whole hours or half hours are allowed (e.g. 0.5, 2, 2.5)</label>
                                     <div class="flex flex-row gap-2">
@@ -562,6 +585,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                <!-- duration list -->
                                 <p x-cloak x-show="durations.length === 0" class="text-zinc-600">No durations available.</p>
                                 <div x-cloak x-show="durations.length > 0" class="overflow-auto">
                                     <table class="min-w-full divide-y divide-zinc-200">
@@ -603,16 +627,16 @@
                                 <div class="flex flex-col">
                                     <label class="block text-zinc-700 text-sm font-bold mb-1">Add New Employee</label>
                                     <div class="relative">
-                                        <!-- search input -->
+                                        <!-- search input with dropdown trigger -->
                                         <input type="text" x-model="employee_search"
                                             @input="search_employees"
                                             @click="search_employees"
                                             @click.away="employee_show_results = false"
                                             placeholder="Search users..."
                                             class="bg-white shadow appearance-none border rounded w-full py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
-                                        <!-- search results -->
+                                        <!-- dropdown results -->
                                         <div x-show="employee_show_results" x-cloak class="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                            <!-- not found -->
+                                            <!-- no results message -->
                                             <div x-cloak x-show="employee_not_found" class="px-4 py-2 cursor-pointer hover:bg-gray-100">
                                                 <p class="text-zinc-600">No employees found.</p>
                                             </div>
@@ -626,6 +650,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- employee list -->
                                 <p x-cloak x-show="employees.length === 0" class="text-zinc-600">No employees available.</p>
                                 <div x-cloak x-show="employees.length > 0" class="overflow-auto">
                                     <table class="min-w-full divide-y divide-zinc-200">
@@ -671,6 +696,7 @@
                                 <div class="flex flex-col gap-4">
                                     <h3 class="text-lg font-semibold">Reservation Settings</h3>
                                     
+                                    <!-- minimum hours setting -->
                                     <div class="flex flex-col gap-2">
                                         <label class="text-sm font-semibold text-zinc-600">Minimum Hours Before Reservation</label>
                                         <div class="flex gap-2">
@@ -682,6 +708,7 @@
                                         <p class="text-sm text-zinc-500">Minimum number of hours before a reservation can be made</p>
                                     </div>
 
+                                    <!-- max future reservations setting -->
                                     <div class="flex flex-col gap-2">
                                         <label class="text-sm font-semibold text-zinc-600">Maximum Future Reservations (per user)</label>
                                         <div class="flex gap-2">
@@ -693,6 +720,7 @@
                                         <p class="text-sm text-zinc-500">Maximum number of future reservations a user can have at once</p>
                                     </div>
 
+                                    <!-- max days in advance setting -->
                                     <div class="flex flex-col gap-2">
                                         <label class="text-sm font-semibold text-zinc-600">Maximum Days in Advance</label>
                                         <div class="flex gap-2">
@@ -709,6 +737,7 @@
                                 <div class="flex flex-col gap-4">
                                     <h3 class="text-lg font-semibold">Contact Information</h3>
                                     
+                                    <!-- email setting -->
                                     <div class="flex flex-col gap-2">
                                         <label class="text-sm font-semibold text-zinc-600">Email Address</label>
                                         <div class="flex gap-2">
@@ -719,6 +748,7 @@
                                         </div>
                                     </div>
 
+                                    <!-- phone setting -->
                                     <div class="flex flex-col gap-2">
                                         <label class="text-sm font-semibold text-zinc-600">Phone Number</label>
                                         <div class="flex gap-2">
@@ -980,7 +1010,7 @@
                             get today() {
                                 let date = new Date().toLocaleString(undefined, {timeZone: this.timezone});
                                 date = new Date(date);
-                                return this.style_html_date(date); //yyyy-mm-dd
+                                return style_html_date(date); //yyyy-mm-dd
                             },
                             date: null,
                             reservations: [],
@@ -997,7 +1027,7 @@
                                     let start = new Date(reservation.start_full);
                                     let end = new Date(reservation.end_full);
 
-                                    const custom_hours = this.custom_opening_hours[this.style_html_date(start)];
+                                    const custom_hours = this.custom_opening_hours[style_html_date(start)];
                                     const day = start.getDay();
                                     const { open } = custom_hours || this.opening_hours[day];
 
@@ -1029,7 +1059,7 @@
                                         //but we use still the previous date so it is tied to the previous date opening hours
                                         //so we need to check if the reservation should be on the next date and if so, we use the next date
                                         //find out by getting the opening hours
-                                        const custom_hours = this.custom_opening_hours[this.style_html_date(dateA)];
+                                        const custom_hours = this.custom_opening_hours[style_html_date(dateA)];
                                         const day = dateA.getDay();
                                         const { close } = custom_hours || this.opening_hours[day];
                                         const { open } = custom_hours || this.opening_hours[day];
@@ -1232,8 +1262,8 @@
                                     show_modal('Please fill in all the required fields.');
                                     return;
                                 }
-                                this.new_special_open = this.style_time(new Date(`${this.new_special_date} ${this.new_special_open}`));
-                                this.new_special_close = this.style_time(new Date(`${this.new_special_date} ${this.new_special_close}`));
+                                this.new_special_open = style_time(new Date(`${this.new_special_date} ${this.new_special_open}`));
+                                this.new_special_close = style_time(new Date(`${this.new_special_date} ${this.new_special_close}`));
                                 axios.post('/api/admin/save_special_hours', {
                                     date: this.new_special_date,
                                     open: this.new_special_open,
@@ -1283,17 +1313,6 @@
                             },
 
                             //helpers
-                            style_date(dt) { return dt.getDate().toString().padStart(2, '0') + '-' + (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getFullYear(); },
-                            style_time(dt) { return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0'); },
-                            style_html_date(dt) { return dt.getFullYear() + '-' + (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getDate().toString().padStart(2, '0'); },
-                            parse_duration(duration) {
-                                let result = '';
-                                let hours = Math.floor(duration);
-                                let minutes = Math.floor((duration - hours) * 60);
-                                if (hours > 0) { result += hours + ' hour' + (hours > 1 ? 's' : ''); }
-                                if (minutes > 0) { result += ' ' + minutes + ' minutes'; }
-                                return result;
-                            },
                             sort_user_reservations() {
                                 //sort user reservations by date and time
                                 this.user_reservations.sort((a, b) => {
@@ -1307,6 +1326,17 @@
                                     }
                                     return dateA - dateB;
                                 });
+                            },
+                            get_future_reservations(reservations) {
+                                return reservations.filter(r => new Date(r.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
+                            },
+                            get_past_reservations(reservations) {
+                                return reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
+                            },
+                            get_sorted_special_dates() {
+                                const special_dates = Object.keys(this.custom_opening_hours);
+                                const closing_dates = this.closing_dates.filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/));
+                                return [...special_dates, ...closing_dates].sort((a,b) => new Date(a) - new Date(b));
                             },
                         }
                     }

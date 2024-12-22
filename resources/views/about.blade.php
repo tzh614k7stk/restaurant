@@ -39,6 +39,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                             </svg>
                         </div>
+                        <!-- embedded google maps -->
                         <div class="aspect-video w-full rounded-lg overflow-hidden">
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d798.8889872194158!2d16.62070427610695!3d49.18039747025195!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x471295033106c993%3A0xc31cfdec2798b358!2sSvatopetrsk%C3%A1%2035%2F7%2C%20617%2000%20Brno-jih!5e1!3m2!1sen!2scz!4v1734460033374!5m2!1sen!2scz"
@@ -60,27 +61,33 @@
                             </svg>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- regular opening hours -->
                             <div>
                                 <h3 class="text-lg font-semibold mb-2">Regular Hours</h3>
+                                <!-- show message if no regular hours -->
                                 <template x-if="Object.keys(opening_hours).length === 0">
                                     <p class="text-zinc-600">No regular hours currently scheduled.</p>
                                 </template>
+                                <!-- iterate through regular opening hours -->
                                 <template x-for="(hours, day) in opening_hours" :key="day">
                                     <div class="flex justify-between py-1">
-                                        <span x-text="['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]"></span>
-                                        <span x-text="closing_dates.includes(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day]) ? 'Closed' : hours.open + ' - ' + hours.close"></span>
+                                        <span x-text="get_day_name(day)"></span>
+                                        <span x-text="get_opening_hours(day)"></span>
                                     </div>
                                 </template>
                             </div>
+                            <!-- special opening hours -->
                             <div>
                                 <h3 class="text-lg font-semibold mb-2">Special Hours</h3>
+                                <!-- show message if no special hours -->
                                 <template x-if="Object.keys(custom_opening_hours).length === 0 && !closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
                                     <p class="text-zinc-600">No special hours currently scheduled.</p>
                                 </template>
-                                <template x-for="date in [...Object.keys(custom_opening_hours), ...closing_dates.filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/))].sort((a,b) => new Date(a) - new Date(b))" :key="date">
+                                <!-- iterate through special opening hours and closing dates -->
+                                <template x-for="date in get_sorted_dates()" :key="date">
                                     <div class="flex justify-between py-1">
-                                        <span x-text="new Date(date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})"></span>
-                                        <span x-text="date in custom_opening_hours ? custom_opening_hours[date].open + ' - ' + custom_opening_hours[date].close : 'Closed'"></span>
+                                        <span x-text="style_human_date(new Date(date))"></span>
+                                        <span x-text="get_special_hours(date)"></span>
                                     </div>
                                 </template>
                             </div>
@@ -95,6 +102,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
                             </svg>
                         </div>
+                        <!-- list of questions with collapsible answers -->
                         <div class="flex flex-col gap-y-2">
                             <template x-for="(question, index) in faq" :key="index">
                                 <div x-data="{ expanded: false }">
@@ -169,7 +177,24 @@
                                 {q: 'There are no available tables for my desired date and time, what can I do?', a: 'You may give us a call and we will try to arrange a table for you.'},
                                 {q: 'I need to reserve multiple tables, is that possible?', a: 'Yes, we can arrange a reservation for a larger group of people over the phone.'},
                                 {q: 'Is there a parking available?', a: 'Yes, there is a small parking lot in front of the restaurant.'}
-                            ]
+                            ],
+
+                            get_day_name(day) {
+                                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                                return days[day];
+                            },
+                            get_opening_hours(day) {
+                                const day_name = this.get_day_name(day);
+                                return this.closing_dates.includes(day_name) ? 'Closed' : this.opening_hours[day].open + ' - ' + this.opening_hours[day].close;
+                            },
+                            get_sorted_dates() {
+                                const special_dates = Object.keys(this.custom_opening_hours);
+                                const closing_dates = this.closing_dates.filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/));
+                                return [...special_dates, ...closing_dates].sort((a,b) => new Date(a) - new Date(b));
+                            },
+                            get_special_hours(date) {
+                                return date in this.custom_opening_hours ? this.custom_opening_hours[date].open + ' - ' + this.custom_opening_hours[date].close : 'Closed';
+                            },
                         }
                     }
                 </script>
