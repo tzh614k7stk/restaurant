@@ -10,6 +10,7 @@ use App\Models\OpeningHours;
 use App\Models\RestaurantConfig;
 use App\Http\Middleware\Employee;
 use App\Models\User;
+
 //home page
 Route::view('/', 'welcome');
 Route::redirect('/home', '/');
@@ -246,6 +247,38 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => true]);
         });
 
+        Route::post('/api/admin/save_table', function (Request $request) {
+            $request->validate([
+                'name' => 'nullable|string|max:64',
+                'seats' => 'required|integer|min:0'
+            ]);
+
+            $table = Table::create(['name' => $request->name, 'seats' => $request->seats]);
+            return response()->json(['success' => true, 'table' => $table]);
+        });
+
+        Route::post('/api/admin/delete_table', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:tables,id'
+            ]);
+
+            if (DB::table('reservations')->where('table_id', $request->id)->exists()) { return response()->json(['success' => false, 'message' => 'Cannot delete table that has reservations.'], 422); }
+
+            Table::where('id', $request->id)->delete();
+            return response()->json(['success' => true]);
+        });
+
+        Route::post('/api/admin/edit_table', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:tables,id',
+                'name' => 'nullable|string|max:64',
+                'seats' => 'required|integer|min:0'
+            ]);
+
+            Table::where('id', $request->id)->update(['name' => $request->name, 'seats' => $request->seats]);
+            return response()->json(['success' => true]);
+        });
+
         Route::post('/api/admin/config', function (Request $request) {            
             //get restaurant configuration
             $config = RestaurantConfig::all()->pluck('value', 'name');
@@ -299,8 +332,11 @@ Route::middleware('auth')->group(function () {
                 DB::table('users')->join('employees', 'users.id', '=', 'employees.user_id')->select('employees.admin', 'users.email', 'users.name', 'employees.id')->get()
                 : [];
 
+            $tables = Table::all();
+
             return response()->json([
                 'success' => true,
+                'tables' => $tables,
                 'timezone' => $timezone,
                 'opening_hours' => $regular_hours,
                 'custom_opening_hours' => $custom_hours,

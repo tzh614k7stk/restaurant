@@ -398,7 +398,7 @@
                                     </svg>
                                 </div>
 
-                                <!-- Add new special hours -->
+                                <!-- add new special hours -->
                                 <div class="flex flex-col gap-4">
                                     <div x-data="{ new_custom_hours: false }" class="flex flex-col gap-2">
                                         <button @click="new_custom_hours = !new_custom_hours" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
@@ -430,7 +430,7 @@
                                     </div>
                                 </div>
 
-                                <!-- List of special hours -->
+                                <!-- list of special hours -->
                                 <div class="overflow-auto">
                                     <template x-if="Object.keys(custom_opening_hours).length === 0 && !closing_dates.some(date => date.match(/^\d{4}-\d{2}-\d{2}$/))">
                                         <p class="text-zinc-600">No special hours currently scheduled.</p>
@@ -468,6 +468,72 @@
                                             </tbody>
                                         </table>
                                     </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- tables -->
+                    <template x-cloak x-if="reservations_loaded">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8 max-h-screen overflow-y-auto">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center gap-2 mb-6">
+                                    <h2 class="text-2xl font-bold tracking-wide">Tables</h2>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                                    </svg>
+                                </div>
+                                <!-- add new table -->
+                                <div class="flex flex-col gap-4">
+                                    <div x-data="{ new_table: false }" class="flex flex-col gap-2">
+                                        <button @click="new_table = !new_table" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': new_table }">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                            Add New Table
+                                        </button>
+                                        <div x-show="new_table" x-collapse class="flex flex-col gap-2 p-4 border rounded">
+                                            <label class="text-sm font-semibold text-zinc-600">Table Name</label>
+                                            <input type="text" x-model="new_table_name" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                            <label class="text-sm font-semibold text-zinc-600">Number of Seats</label>
+                                            <input type="number" min="0" step="1" x-model="new_table_seats" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                            <button @click="save_table()" class="flex relative items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-800 active:bg-zinc-950 text-white font-bold rounded py-2 px-3 focus:outline-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+                                                Create Table
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- list of tables -->
+                                <p x-cloak x-show="tables.length === 0" class="text-zinc-600">No tables available.</p>
+                                <div x-cloak x-show="tables.length > 0" class="overflow-auto">
+                                    <table class="min-w-full divide-y divide-zinc-200">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Name</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Seats</th>
+                                                <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-zinc-200">
+                                            <template x-for="table in tables" :key="table.id">
+                                                <tr class="hover:bg-zinc-200">
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <input type="text" x-model="table.name" :placeholder="table.name ?? ('Table ' + table.id)" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <input type="number" min="0" step="1" x-model="table.seats" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap flex flex-col items-end">
+                                                        <button @click="delete_table(table.id)" class="text-rose-500 hover:text-rose-700">Delete</button>
+                                                        <button @click="edit_table(table.id)" class="text-zinc-500 hover:text-zinc-700">Edit</button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -675,6 +741,7 @@
                         return {                            
                             //server configuration
                             first_load: false,
+                            tables: [],
                             timezone: '',
                             durations: [],
                             opening_hours: {},
@@ -701,6 +768,7 @@
                                         this.max_days_in_advance = data.max_days_in_advance;
                                         this.phone = data.phone;
                                         this.email = data.email;
+                                        this.tables = data.tables;
                                         if (this.date === null) { this.date = this.today; }
                                         this.get_reservations();
                                     }
@@ -726,6 +794,68 @@
                                     Alpine.store('modal').open(
                                         'Error',
                                         'Failed to save configuration. ' + (error.response?.data?.message || 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                });
+                            },
+
+
+                            //tables
+                            new_table_name: '',
+                            new_table_seats: null,
+                            save_table() {
+                                axios.post('/api/admin/save_table', { name: this.new_table_name, seats: this.new_table_seats }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.tables.push(data.table);
+                                    }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to save table. ' + (error.response?.data?.message || 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                }).finally(() => {
+                                    this.new_table_name = '';
+                                    this.new_table_seats = null;
+                                });
+                            },
+                            delete_table(table_id) {
+                                axios.post('/api/admin/delete_table', { id: table_id }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.tables = this.tables.filter(table => table.id !== table_id);
+                                    }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to delete table. ' + (error.response?.data?.message || 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                });
+                            },
+                            edit_table(table_id) {
+                                const table = this.tables.find(table => table.id === table_id);
+                                axios.post('/api/admin/edit_table', { id: table_id, name: table.name, seats: table.seats }).then(response => {
+                                    const data = response.data;
+                                    if (!data.success) { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to edit table. ' + (error.response?.data?.message || 'Unknown error.'),
                                         null,
                                         'OK',
                                         'Cancel',
