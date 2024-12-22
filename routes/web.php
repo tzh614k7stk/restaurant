@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function () {
                 'closed' => 'required|boolean'
             ]);
 
+            //for special dates only include opening/closing times if not closed
             $opening_hours = OpeningHours::updateOrCreate(['day' => $request->date],
                 array_merge(
                     ['closed' => $request->closed],
@@ -171,7 +172,7 @@ Route::middleware('auth')->group(function () {
                 'duration' => 'required|decimal:0,1|min:0.5'
             ]);
 
-            //we allow only half hours
+            //only allow whole and half hours (e.g. 1.0, 1.5, 2.0, etc)
             $duration = floatval($request->duration);
             $decimal = $duration - floor($duration);
             if ($decimal != 0 && $decimal != 0.5)
@@ -262,6 +263,7 @@ Route::middleware('auth')->group(function () {
                 'id' => 'required|exists:tables,id'
             ]);
 
+            //deleting tables what  have been used for reservations is prohibited as currently there is no way to alert the user as their reservation might be deleted
             if (DB::table('reservations')->where('table_id', $request->id)->exists()) { return response()->json(['success' => false, 'message' => 'Cannot delete table that has reservations.'], 422); }
 
             Table::where('id', $request->id)->delete();

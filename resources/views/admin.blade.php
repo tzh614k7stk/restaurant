@@ -15,6 +15,7 @@
     @vite('resources/css/app.css')
 
     @vite('resources/js/alpine.js')
+    @vite('resources/js/app.js')
     @vite('resources/js/axios.js')
 
     @livewireStyles
@@ -774,14 +775,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to get restaurant configuration. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to get restaurant configuration.', {error});
                                 }).finally(() => {
                                     this.first_load = true; //fix min/max attribute causing date input to flicker
                                 });
@@ -791,17 +785,9 @@
                                     const data = response.data;
                                     if (!data.success) { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to save configuration. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to save configuration.', {error});
                                 });
                             },
-
 
                             //tables
                             new_table_name: '',
@@ -815,14 +801,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to save table. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to save table.', {error});
                                 }).finally(() => {
                                     this.new_table_name = '';
                                     this.new_table_seats = null;
@@ -837,14 +816,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to delete table. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to delete table.', {error});
                                 });
                             },
                             edit_table(table_id) {
@@ -853,14 +825,7 @@
                                     const data = response.data;
                                     if (!data.success) { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to edit table. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to edit table.', {error});
                                 });
                             },
 
@@ -887,14 +852,7 @@
                                         }
                                         else { throw { response: {...response} }; }
                                     }).catch(error => {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to search users. ' + (error.response?.data?.message || 'Unknown error.'),
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
+                                        show_modal('Failed to search users.', {error});
                                     });
                                 } else {
                                     this.user_search_result = [];
@@ -930,14 +888,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to get user data. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to get user data.', {error});
                                 });
                             },
                             set_max_future_reservations(user_id, max_future_reservations) {
@@ -949,31 +900,22 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to set max future reservations. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to set max future reservations.', {error});
                                 });
                             },
                             set_max_future_reservations_with_input(user_id, max_future_reservations) {
-                                Alpine.store('modal').open(
-                                    'Change Reservation Limit',
-                                    'Enter the new reservation limit for the user.',
-                                    () => {
+                                show_modal('Enter the new reservation limit for the user.', {
+                                    title: 'Change Reservation Limit',
+                                    action: () => {
                                         max_future_reservations = Alpine.store('modal').input;
                                         if (!max_future_reservations) { max_future_reservations = null; }
                                         this.set_max_future_reservations(user_id, max_future_reservations);
                                     },
-                                    'Save',
-                                    'Cancel',
-                                    'bg-zinc-700 hover:bg-zinc-800',
-                                    true,
-                                    max_future_reservations
-                                );
+                                    confirm_text: 'Save',
+                                    yes_class: 'bg-zinc-700 hover:bg-zinc-800',
+                                    input_bool: true,
+                                    input: max_future_reservations
+                                });
                             },
 
                             //employees
@@ -996,14 +938,7 @@
                                         }
                                         else { throw { response: {...response} }; }
                                     }).catch(error => {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to search employees. ' + (error.response?.data?.message || 'Unknown error.'),
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
+                                        show_modal('Failed to search employees.', {error});
                                     });
                                 } else {
                                     this.employee_search_result = [];
@@ -1019,14 +954,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to add employee. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to add employee.', {error});
                                 }).finally(() => {
                                     this.clear_employees();
                                 });
@@ -1040,14 +968,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to remove employee. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to remove employee.', {error});
                                 });
                             },
                             clear_employees() {
@@ -1152,24 +1073,16 @@
                                     }
                                     else { this.reservations_error = true; throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to get reservations. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to get reservations.', {error});
                                     this.reservations_error = true;
                                 }).finally(() => {
                                     this.reservations_loading = false;
                                 });
                             },
                             cancel_reservation(reservation_id) {
-                                Alpine.store('modal').open(
-                                    'Are you sure?',
-                                    'This action cannot be undone.',
-                                    () => {
+                                show_modal('This action cannot be undone.', {
+                                    title: 'Are you sure?',
+                                    action: () => {
                                         axios.post('/api/delete_reservation', { id: reservation_id }).then(response => {
                                             const data = response.data;
                                             if (data.success)
@@ -1185,28 +1098,18 @@
                                             }
                                             else { throw { response: {...response} }; }
                                         }).catch(error => {
-                                            Alpine.store('modal').open(
-                                                'Error',
-                                                'Failed to cancel reservation. ' + (error.response?.data?.message || 'Unknown error.'),
-                                                null,
-                                                'OK',
-                                                'Cancel',
-                                                'bg-rose-600 hover:bg-rose-700'
-                                            );
+                                            show_modal('Failed to cancel reservation.', {error});
                                         });
                                     },
-                                    'Confirm',
-                                    'Cancel',
-                                    'bg-rose-600 hover:bg-rose-700'
-                                );
+                                    confirm_text: 'Confirm'
+                                });
                             },
 
                             //notes
                             edit_reservation_note(reservation_id, note) {
-                                Alpine.store('modal').open(
-                                    'Edit Note',
-                                    'Enter the new note for this reservation.',
-                                    () => {
+                                show_modal('Enter the new note for this reservation.', {
+                                    title: 'Edit Note',
+                                    action: () => {
                                         note = Alpine.store('modal').input;
                                         if (!note) { note = null; }
                                         axios.post('/api/admin/reservation_note', { id: reservation_id, note: note }).then(response => {
@@ -1223,28 +1126,19 @@
                                             }
                                             else { throw { response: {...response} }; }
                                         }).catch(error => {
-                                            Alpine.store('modal').open(
-                                                'Error',
-                                                'Failed to edit note. ' + (error.response?.data?.message || 'Unknown error.'),
-                                                null,
-                                                'OK',
-                                                'Cancel',
-                                                'bg-rose-600 hover:bg-rose-700'
-                                            );
+                                            show_modal('Failed to edit note.', {error});
                                         });
                                     },
-                                    'Save',
-                                    'Cancel',
-                                    'bg-zinc-700 hover:bg-zinc-800',
-                                    true,
-                                    note
-                                );
+                                    confirm_text: 'Save',
+                                    yes_class: 'bg-zinc-700 hover:bg-zinc-800',
+                                    input_bool: true,
+                                    input: note
+                                });
                             },
                             edit_user_note(user_id, note) {
-                                Alpine.store('modal').open(
-                                    'Edit Note',
-                                    'Enter the new note for the user.',
-                                    () => {
+                                show_modal('Enter the new note for the user.', {
+                                    title: 'Edit Note',
+                                    action: () => {
                                         note = Alpine.store('modal').input;
                                         if (!note) { note = null; }
                                         axios.post('/api/admin/user_note', { id: user_id, note: note }).then(response => {
@@ -1257,22 +1151,14 @@
                                             }
                                             else { throw { response: {...response} }; }
                                         }).catch(error => {
-                                            Alpine.store('modal').open(
-                                                'Error',
-                                                'Failed to edit note. ' + (error.response?.data?.message || 'Unknown error.'),
-                                                null,
-                                                'OK',
-                                                'Cancel',
-                                                'bg-rose-600 hover:bg-rose-700'
-                                            );
+                                            show_modal('Failed to edit note.', {error});
                                         });
                                     },
-                                    'Save',
-                                    'Cancel',
-                                    'bg-zinc-700 hover:bg-zinc-800',
-                                    true,
-                                    note
-                                );
+                                    confirm_text: 'Save',
+                                    yes_class: 'bg-zinc-700 hover:bg-zinc-800',
+                                    input_bool: true,
+                                    input: note
+                                });
                             },
 
                             //durations
@@ -1287,14 +1173,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to create duration. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to create duration.', {error});
                                 }).finally(() => {
                                     this.new_duration = null;
                                 });
@@ -1308,14 +1187,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to delete duration. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to delete duration.', {error});
                                 });
                             },
 
@@ -1334,14 +1206,7 @@
                                 const hours = this.opening_hours[day_index];
                                 if (!hours && !this.closing_dates.includes(day_name))
                                 {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Please set both opening and closing hours.',
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Please set both opening and closing hours.');
                                     return;
                                 }
                                 axios.post('/api/admin/save_opening_hours', {
@@ -1353,14 +1218,7 @@
                                     const data = response.data;
                                     if (!data.success) { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to save opening hours. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to save opening hours.', {error});
                                 });
                             },
 
@@ -1371,14 +1229,7 @@
                             save_special_hours(closed = false) {
                                 if (!this.new_special_date || (!closed && (!this.new_special_open || !this.new_special_close)))
                                 {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Please fill in all the required fields.',
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Please fill in all the required fields.');
                                     return;
                                 }
                                 this.new_special_open = this.style_time(new Date(`${this.new_special_date} ${this.new_special_open}`));
@@ -1413,14 +1264,7 @@
                                         this.new_special_close = '';
                                     } else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to save special hours. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to save special hours.', {error});
                                 });
                             },
 
@@ -1434,14 +1278,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to delete special hours. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to delete special hours.', {error});
                                 });
                             },
 

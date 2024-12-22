@@ -15,8 +15,8 @@
     @vite('resources/css/app.css')
 
     @vite('resources/js/alpine.js')
+    @vite('resources/js/app.js')
     @vite('resources/js/axios.js')
-
     @livewireStyles
     @livewireScripts
 </head>
@@ -343,14 +343,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to load restaurant configuration. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to load restaurant configuration.', {error});
                                 }).finally(() => {
                                     this.first_load = true; //fix min/max attribute causing date input to flicker
                                 });
@@ -395,14 +388,7 @@
                                         }
                                         else { throw { response: {...response} }; }
                                     }).catch(error => {
-                                        Alpine.store('modal').open(
-                                            'Error',
-                                            'Failed to search users. ' + (error.response?.data?.message || 'Unknown error.'),
-                                            null,
-                                            'OK',
-                                            'Cancel',
-                                            'bg-rose-600 hover:bg-rose-700'
-                                        );
+                                        show_modal('Failed to search users.', {error});
                                     });
                                 } else {
                                     this.user_search_result = [];
@@ -459,14 +445,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to cancel reservation. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to cancel reservation.', {error});
                                 });
                             },
 
@@ -691,15 +670,16 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
+                                    show_modal(
                                         (error.response && error.response.status === 401) ?
                                             'You must be logged in to make a reservation.' :
                                             'Failed to create reservation. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        (error.response && error.response.status === 401) ? () => window.location.href = '/login' : null,
-                                        (error.response && error.response.status === 401) ? 'Login' : 'OK',
-                                        'Cancel',
-                                        (error.response && error.response.status === 401) ? 'bg-zinc-700 hover:bg-zinc-800' : 'bg-rose-600 hover:bg-rose-700'
+                                        {
+                                            error,
+                                            action: (error.response && error.response.status === 401) ? () => window.location.href = '/login' : null,
+                                            confirm_text: (error.response && error.response.status === 401) ? 'Login' : 'OK',
+                                            yes_class: (error.response && error.response.status === 401) ? 'bg-zinc-700 hover:bg-zinc-800' : 'bg-rose-600 hover:bg-rose-700'
+                                        }
                                     );
                                 }).finally(() => {
                                     //reset form

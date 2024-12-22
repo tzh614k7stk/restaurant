@@ -15,6 +15,7 @@
     @vite('resources/css/app.css')
 
     @vite('resources/js/alpine.js')
+    @vite('resources/js/app.js')
     @vite('resources/js/axios.js')
 
     @livewireStyles
@@ -158,14 +159,7 @@
                                     }
                                     else { throw { response: {...response} }; }
                                 }).catch(error => {
-                                    Alpine.store('modal').open(
-                                        'Error',
-                                        'Failed to get restaurant information. ' + (error.response?.data?.message || 'Unknown error.'),
-                                        null,
-                                        'OK',
-                                        'Cancel',
-                                        'bg-rose-600 hover:bg-rose-700'
-                                    );
+                                    show_modal('Failed to get restaurant information.', {error});
                                 });
                             },
 
