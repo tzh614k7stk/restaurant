@@ -73,6 +73,56 @@ class DatabaseSeeder extends Seeder
 
         //create reservations for the test user
         $reservations = [
+            [
+                'start_date' => '2024-12-30',
+                'end_date' => '2024-12-30',
+                'start_time' => '18:00',
+                'end_time' => '20:00',
+                'duration' => 2.0,
+                'seats' => 4,
+                'table_id' => 6, //Lake View Table
+                'user_id' => $user->id,
+            ],
+            [
+                'start_date' => '2024-12-27',
+                'end_date' => '2024-12-27',
+                'start_time' => '19:30',
+                'end_time' => '21:00',
+                'duration' => 1.5,
+                'seats' => 2,
+                'table_id' => 1, //Garden Table
+                'user_id' => $user->id,
+            ],
+            [
+                'start_date' => '2025-01-10',
+                'end_date' => '2025-01-11',
+                'start_time' => '22:00',
+                'end_time' => '01:00',
+                'duration' => 3.0,
+                'seats' => 12,
+                'table_id' => 12, //Private Room
+                'user_id' => $user->id,
+            ],
+            [
+                'start_date' => '2025-01-14',
+                'end_date' => '2025-01-14',
+                'start_time' => '18:00',
+                'end_time' => '20:00',
+                'duration' => 2.0,
+                'seats' => 4,
+                'table_id' => 6, //Lake View Table
+                'user_id' => $user->id,
+            ],
+            [
+                'start_date' => '2025-01-16',
+                'end_date' => '2025-01-16',
+                'start_time' => '18:00',
+                'end_time' => '20:00',
+                'duration' => 2.0,
+                'seats' => 4,
+                'table_id' => 6, //Lake View Table
+                'user_id' => $user->id,
+            ],
         ];
         foreach ($reservations as $reservation) { Reservation::create($reservation); }
 
