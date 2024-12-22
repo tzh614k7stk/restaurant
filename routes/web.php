@@ -226,11 +226,36 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => true]);
         });
 
+        Route::post('/api/admin/set_max_future_reservations', function (Request $request) {
+            $request->validate([
+                'id' => 'required|exists:users,id',
+                'max_future_reservations' => 'nullable|integer|min:0'
+            ]);
+
+            User::where('id', $request->id)->update(['max_future_reservations' => $request->max_future_reservations]);
+            return response()->json(['success' => true]);
+        });
+
+        Route::post('/api/admin/save_config', function (Request $request) {
+            $request->validate([
+                'key' => 'required|string|max:32',
+                'value' => 'required|string|max:128'
+            ]);
+
+            RestaurantConfig::updateOrCreate(['name' => $request->key], ['value' => $request->value]);
+            return response()->json(['success' => true]);
+        });
+
         Route::post('/api/admin/config', function (Request $request) {            
             //get restaurant configuration
             $config = RestaurantConfig::all()->pluck('value', 'name');
             $timezone = $config['timezone'];
             $durations = json_decode($config['durations']);
+            $max_future_reservations = intval($config['max_future_reservations']);
+            $min_hours_before_reservation = intval($config['min_hours_before_reservation']);
+            $max_days_in_advance = intval($config['max_days_in_advance']);
+            $phone = $config['phone'];
+            $email = $config['email'];
             //get opening hours
             $opening_hours = OpeningHours::all();
 
@@ -281,7 +306,12 @@ Route::middleware('auth')->group(function () {
                 'custom_opening_hours' => $custom_hours,
                 'closing_dates' => $closing_dates,
                 'durations' => $durations,
-                'employees' => $employees
+                'employees' => $employees,
+                'max_future_reservations' => $max_future_reservations,
+                'min_hours_before_reservation' => $min_hours_before_reservation,
+                'max_days_in_advance' => $max_days_in_advance,
+                'phone' => $phone,
+                'email' => $email
             ]);
         });
     });
@@ -436,25 +466,35 @@ Route::post('/api/create_reservation', function (Request $request) {
     $durations = json_decode($config['durations']);
     $max_days_in_advance = intval($config['max_days_in_advance']);
     $max_future_reservations = intval($config['max_future_reservations']);
+    $min_hours_before_reservation = intval($config['min_hours_before_reservation']);
     $timezone = $config['timezone'];
 
     $today = new DateTime('today', new DateTimeZone($timezone));
+    $now = new DateTime('now', new DateTimeZone($timezone));
     $max_date = (clone $today)->modify('+'.$max_days_in_advance.' days');
 
     //validate request data
     $request->validate([
-        'date' => 'required|date|after_or_equal:'.$today->format('Y-m-d').'|before_or_equal:'.$max_date->format('Y-m-d'),
+        'date' => 'required|date|after_or_equal:'.$now->format('Y-m-d').'|before_or_equal:'.$max_date->format('Y-m-d'),
         'time' => 'required|date_format:H:i',
         'duration' => 'required|decimal:0,1|in:'.implode(',', $durations),
         'table_id' => 'required|exists:tables,id',
         'user_id' => 'sometimes|required|exists:users,id'
     ]);
 
-    //check if table is available at requested time
-    //reservations have start_date, end_date (yyyy-mm-dd) and start_time, end_time (hh:mm)
-    //we need to calculate new_start, new_end
+    //boundaries of the new reservation
     $new_start = new DateTime($request->date.' '.$request->time, new DateTimeZone($timezone));
     $new_end = (clone $new_start)->add(new DateInterval('PT'.strval($request->duration * 60).'M'));
+
+    //reservation validated to be today or in the future, now check if it is actually in the future in case of today based on time
+    if ($now > $new_start) { return response()->json(['success' => false, 'message' => 'Reservation time is in the past.'], 422); }
+    
+    //check min hours before reservation
+    $min_allowed_start = (clone $now)->add(new DateInterval('PT'.$min_hours_before_reservation.'H'));
+    if ($new_start < $min_allowed_start) { return response()->json(['success' => false, 'message' => 'Reservation must be at least '.$min_hours_before_reservation.' '.($min_hours_before_reservation == 1 ? 'hour' : 'hours').' in the future.'], 422); }
+
+    //check if table is available at requested time
+    //reservations have start_date, end_date (yyyy-mm-dd) and start_time, end_time (hh:mm)
     ////////////////////////////////////////////
     //here you can see which cases handle which overlaps
     //NEW:        |__________|
@@ -520,7 +560,9 @@ Route::post('/api/create_reservation', function (Request $request) {
     //check if user has too many future reservations (unless employee)
     if (!$user->employee)
     {
-        $future_reservations = Reservation::where('user_id', $user->id)->where('start_date', '>', $today->format('Y-m-d'))->where('start_time', '>', $today->format('H:i'))->count();
+        $future_reservations = Reservation::where('user_id', $user->id)->where('start_date', '>=', $now->format('Y-m-d'))->get();
+        $future_reservations = $future_reservations->filter(function($reservation) use ($timezone, $now) { return new DateTime($reservation->start_date . ' ' . $reservation->start_time, new DateTimeZone($timezone)) > $now; })->count();
+        $max_future_reservations = $user->max_future_reservations ?? $max_future_reservations;
         if ($future_reservations >= $max_future_reservations) { return response()->json(['success' => false, 'message' => 'Maximum amount of reservations reached.'], 422); }
     }
 

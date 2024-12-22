@@ -159,6 +159,7 @@
                                                 <p class="text-zinc-600">Employee: <span class="text-zinc-700" x-text="user_data.employee ? 'Yes' : 'No'"></span></p>
                                                 <p class="text-zinc-600">Email: <span class="text-zinc-700" x-text="user_data.email"></span></p>
                                                 <p class="text-zinc-600">Member since: <span class="text-zinc-700" x-text="style_date(new Date(user_data.created_at)) + ' ' + style_time(new Date(user_data.created_at))"></span></p>
+                                                <p class="text-zinc-600">Reservation Limit: <span class="text-zinc-700" x-text="user_data.max_future_reservations !== null ? (user_data.max_future_reservations !== 0 ? user_data.max_future_reservations : 'Blocked') : max_future_reservations"></span></p>
                                                 <p x-cloak x-show="user_data.note" class="text-zinc-600">Note: <span class="text-zinc-700" x-text="user_data.note"></span></p>
                                             </div>
                                             <button @click="edit_user_note(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
@@ -167,6 +168,28 @@
                                                 </svg>
                                                 Edit Note
                                             </button>
+                                            <div x-cloak x-show="user_data.max_future_reservations !== 0" class="flex flex-col">
+                                                <button @click="set_max_future_reservations_with_input(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                                    </svg>
+                                                    Change Reservation Limit
+                                                </button>
+                                                <button @click="set_max_future_reservations(user_data.id, 0)" class="text-sm font-semibold text-rose-500 hover:text-rose-700 flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                    Block User
+                                                </button>
+                                            </div>
+                                            <div x-cloak x-show="user_data.max_future_reservations === 0" class="flex flex-col">
+                                                <button @click="set_max_future_reservations(user_data.id, null)" class="text-sm font-semibold text-green-300 hover:text-green-400 flex flex-row items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                    Unblock User
+                                                </button>
+                                            </div>
                                         </div>
                                     </template>
                                     <!-- user reservations -->
@@ -498,8 +521,8 @@
                         </div>
                     </template>
 
-                    <!-- admin manage employees -->
                     @if (auth()->user()->employee->admin)
+                    <!-- admin manage employees -->
                     <template x-cloak x-if="reservations_loaded">
                         <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8 max-h-screen overflow-y-auto">
                             <div class="flex flex-col gap-4 min-h-80">
@@ -564,6 +587,84 @@
                             </div>
                         </div>
                     </template>
+
+                    <!-- admin manage config -->
+                    <template x-cloak x-if="reservations_loaded">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg px-6 py-8 max-h-screen overflow-y-auto">
+                            <div class="flex items-center gap-2 mb-6">
+                                <h2 class="text-2xl font-bold tracking-wide">Restaurant Configuration</h2>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mb-1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            </div>
+
+                            <div class="flex flex-col gap-6">
+                                <!-- reservation settings -->
+                                <div class="flex flex-col gap-4">
+                                    <h3 class="text-lg font-semibold">Reservation Settings</h3>
+                                    
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-semibold text-zinc-600">Minimum Hours Before Reservation</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" x-model="min_hours_before_reservation" min="0" step="1" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                            <button @click="save_config('min_hours_before_reservation', min_hours_before_reservation)" class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-800 text-white font-bold rounded px-4">
+                                                Save
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-zinc-500">Minimum number of hours before a reservation can be made</p>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-semibold text-zinc-600">Maximum Future Reservations (per user)</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" x-model="max_future_reservations" min="0" step="1" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                            <button @click="save_config('max_future_reservations', max_future_reservations)" class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-800 text-white font-bold rounded px-4">
+                                                Save
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-zinc-500">Maximum number of future reservations a user can have at once</p>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-semibold text-zinc-600">Maximum Days in Advance</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" x-model="max_days_in_advance" min="0" step="1" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none">
+                                            <button @click="save_config('max_days_in_advance', max_days_in_advance)" class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-800 text-white font-bold rounded px-4">
+                                                Save
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-zinc-500">Maximum number of days in advance a reservation can be made</p>
+                                    </div>
+                                </div>
+
+                                <!-- contact information -->
+                                <div class="flex flex-col gap-4">
+                                    <h3 class="text-lg font-semibold">Contact Information</h3>
+                                    
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-semibold text-zinc-600">Email Address</label>
+                                        <div class="flex gap-2">
+                                            <input type="text" x-model="email" maxlength="128" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none w-full max-w-md">
+                                            <button @click="save_config('email', email)" class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-800 text-white font-bold rounded px-4">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-semibold text-zinc-600">Phone Number</label>
+                                        <div class="flex gap-2">
+                                            <input type="text" x-model="phone" maxlength="128" class="bg-white shadow appearance-none border rounded py-2 px-3 text-zinc-700 leading-tight focus:outline-none w-full max-w-md">
+                                            <button @click="save_config('phone', phone)" class="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-800 text-white font-bold rounded px-4">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                     @endif
 
                     @include('modal')
@@ -579,6 +680,11 @@
                             opening_hours: {},
                             custom_opening_hours: {},
                             closing_dates: [],
+                            max_future_reservations: null,
+                            min_hours_before_reservation: null,
+                            max_days_in_advance: null,
+                            phone: null,
+                            email: null,
                             get_restaurant_config() {
                                 axios.post('/api/admin/config').then(response => {
                                     const data = response.data;
@@ -590,6 +696,11 @@
                                         this.closing_dates = data.closing_dates;
                                         this.durations = data.durations;
                                         this.employees = data.employees;
+                                        this.max_future_reservations = data.max_future_reservations;
+                                        this.min_hours_before_reservation = data.min_hours_before_reservation;
+                                        this.max_days_in_advance = data.max_days_in_advance;
+                                        this.phone = data.phone;
+                                        this.email = data.email;
                                         if (this.date === null) { this.date = this.today; }
                                         this.get_reservations();
                                     }
@@ -605,6 +716,21 @@
                                     );
                                 }).finally(() => {
                                     this.first_load = true; //fix min/max attribute causing date input to flicker
+                                });
+                            },
+                            save_config(key, value) {
+                                axios.post('/api/admin/save_config', { key, value }).then(response => {
+                                    const data = response.data;
+                                    if (!data.success) { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to save configuration. ' + (error.response?.data?.message || 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
                                 });
                             },
 
@@ -683,6 +809,41 @@
                                         'bg-rose-600 hover:bg-rose-700'
                                     );
                                 });
+                            },
+                            set_max_future_reservations(user_id, max_future_reservations) {
+                                axios.post('/api/admin/set_max_future_reservations', { id: user_id, max_future_reservations: max_future_reservations }).then(response => {
+                                    const data = response.data;
+                                    if (data.success)
+                                    {
+                                        this.user_data.max_future_reservations = max_future_reservations;
+                                    }
+                                    else { throw { response: {...response} }; }
+                                }).catch(error => {
+                                    Alpine.store('modal').open(
+                                        'Error',
+                                        'Failed to set max future reservations. ' + (error.response?.data?.message || 'Unknown error.'),
+                                        null,
+                                        'OK',
+                                        'Cancel',
+                                        'bg-rose-600 hover:bg-rose-700'
+                                    );
+                                });
+                            },
+                            set_max_future_reservations_with_input(user_id, max_future_reservations) {
+                                Alpine.store('modal').open(
+                                    'Change Reservation Limit',
+                                    'Enter the new reservation limit for the user.',
+                                    () => {
+                                        max_future_reservations = Alpine.store('modal').input;
+                                        if (!max_future_reservations) { max_future_reservations = null; }
+                                        this.set_max_future_reservations(user_id, max_future_reservations);
+                                    },
+                                    'Save',
+                                    'Cancel',
+                                    'bg-zinc-700 hover:bg-zinc-800',
+                                    true,
+                                    max_future_reservations
+                                );
                             },
 
                             //employees
