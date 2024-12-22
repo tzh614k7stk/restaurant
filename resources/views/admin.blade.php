@@ -177,7 +177,7 @@
                                             </button>
                                             <!-- conditional buttons based on user status -->
                                             <div x-cloak x-show="user_data.max_future_reservations !== 0" class="flex flex-col">
-                                                <button @click="set_max_future_reservations_with_input(user_data.id, user_data.note)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
+                                                <button @click="set_max_future_reservations_with_input(user_data.id, user_data.max_future_reservations)" class="text-sm font-semibold text-zinc-600 hover:text-zinc-700 flex flex-row items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                                                     </svg>

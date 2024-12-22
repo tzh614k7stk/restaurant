@@ -164,11 +164,11 @@
                             <!-- grid of future reservations -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
                                 <!-- show message when no upcoming reservations -->
-                                <div x-cloak x-show="get_future_reservations(user_reservations).length === 0" class="col-span-full">
+                                <div x-cloak x-show="get_future_reservations().length === 0" class="col-span-full">
                                     <p class="text-zinc-600">You have no upcoming reservations.</p>
                                 </div>
                                 <!-- list of upcoming reservations -->
-                                <template x-for="reservation_id in get_future_reservations(user_reservations)" :key="reservation_id">
+                                <template x-for="reservation_id in get_future_reservations()" :key="reservation_id">
                                     <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
                                         <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                         <p class="text-sm text-zinc-600">
@@ -218,7 +218,7 @@
                             </div>
 
                             <!-- past reservations with collapsible content -->
-                            <div x-cloak x-show="get_past_reservations(user_reservations).length > 0" x-data="{ show_past: false }" class="flex flex-col gap-4">
+                            <div x-cloak x-show="get_past_reservations().length > 0" x-data="{ show_past: false }" class="flex flex-col gap-4">
                                 <button @click="show_past = !show_past" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" :class="{ 'rotate-180': show_past }">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -228,7 +228,7 @@
                                 
                                 <!-- grid of past reservations -->
                                 <div x-show="show_past" x-collapse class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-screen overflow-y-auto">
-                                    <template x-for="reservation_id in get_past_reservations(user_reservations)" :key="reservation_id">
+                                    <template x-for="reservation_id in get_past_reservations()" :key="reservation_id">
                                         <div x-data="{ reservation: reservations.find(r => r.id === reservation_id) }" class="p-4 border rounded">
                                             <p class="font-bold" x-text="tables.find(t => t.id === reservation.table_id).name ?? 'Table ' + reservation.table_id"></p>
                                             <p class="text-sm text-zinc-600">
@@ -646,11 +646,17 @@
                                        this.duration && 
                                        (with_table ? this.selected_table : true);
                             },
-                            get_future_reservations(reservations) {
-                                return reservations.filter(r => new Date(r.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
+                            get_future_reservations() {
+                                return this.user_reservations.filter(id => {
+                                    const reservation = this.reservations.find(r => r.id === id);
+                                    return new Date(reservation.start_full) >= new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone}));
+                                });
                             },
-                            get_past_reservations(reservations) {
-                                return reservations.filter(r => new Date(r.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone})));
+                            get_past_reservations() {
+                                return this.user_reservations.filter(id => {
+                                    const reservation = this.reservations.find(r => r.id === id);
+                                    return new Date(reservation.start_full) < new Date(new Date().toLocaleString(undefined, {timeZone: this.timezone}));
+                                });
                             },
 
                             //form actions
