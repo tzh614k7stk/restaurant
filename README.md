@@ -1,3 +1,7 @@
+## Notice
+The project serves as a showcase of one's abilities to implement a solution on schedule.<br>
+It took exactly 7 days to complete and is never going to be worked on again.
+
 ## Environment Variables
 - `APP_DOMAIN=<your domain>` (used for vite hmr, if APP_URL is `http://example.com`, APP_DOMAIN would be `example.com`)
 
@@ -53,10 +57,7 @@
 
 ## Time Constraints
 As already mentioned above, there are parts of the project, which should be implemented before a production rollout.<br>
-The project took exactly 7 days to complete and is never going to be worked on again.<br>
-It serves as a showcase of one's abilities to implement a solution on schedule.<br>
 For this reason, some of the code is not optimized for performance/readability/maintainability.
-
 
 ## Technologies
 - laravel

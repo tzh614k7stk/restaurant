@@ -6,9 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\OpeningHours;
+use App\Models\Employee;
 use App\Models\RestaurantConfig;
-use Illuminate\Support\Facades\DB;
 
 class AdminConfigDataTest extends TestCase
 {
@@ -24,14 +23,14 @@ class AdminConfigDataTest extends TestCase
 
         //regular employee
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
+        Employee::create([
             'user_id' => $this->employee->id,
             'admin' => false
         ]);
 
         //admin employee
         $this->admin = User::factory()->create();
-        DB::table('employees')->insert([
+        Employee::create([
             'user_id' => $this->admin->id,
             'admin' => true
         ]);

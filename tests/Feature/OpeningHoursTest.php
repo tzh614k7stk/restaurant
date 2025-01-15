@@ -6,8 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\OpeningHours;
-use Illuminate\Support\Facades\DB;
 
 class OpeningHoursTest extends TestCase
 {
@@ -21,9 +21,7 @@ class OpeningHoursTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
-            'user_id' => $this->employee->id
-        ]);
+        Employee::create(['user_id' => $this->employee->id]);
     }
 
     public function test_can_save_regular_opening_hours()

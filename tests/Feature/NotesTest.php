@@ -6,8 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\Reservation;
-use Illuminate\Support\Facades\DB;
+use App\Models\ReservationNote;
 
 class NotesTest extends TestCase
 {
@@ -23,9 +24,7 @@ class NotesTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
-            'user_id' => $this->employee->id
-        ]);
+        Employee::create(['user_id' => $this->employee->id]);
 
         $this->user = User::factory()->create();
         $this->reservation = Reservation::factory()->create([
@@ -51,7 +50,7 @@ class NotesTest extends TestCase
     public function test_can_update_reservation_note()
     {
         //first create note
-        DB::table('reservation_notes')->insert([
+        ReservationNote::create([
             'reservation_id' => $this->reservation->id,
             'note' => 'Original note'
         ]);
@@ -72,7 +71,7 @@ class NotesTest extends TestCase
     public function test_can_delete_reservation_note()
     {
         //first create note
-        DB::table('reservation_notes')->insert([
+        ReservationNote::create([
             'reservation_id' => $this->reservation->id,
             'note' => 'Test note'
         ]);

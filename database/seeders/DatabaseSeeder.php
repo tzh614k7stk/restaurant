@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
 
         //create reservations for the test user
         $reservations = [
-            [
+            /*[
                 'start_date' => '2024-12-30',
                 'end_date' => '2024-12-30',
                 'start_time' => '18:00',
@@ -122,7 +122,7 @@ class DatabaseSeeder extends Seeder
                 'seats' => 4,
                 'table_id' => 6, //Lake View Table
                 'user_id' => $user->id,
-            ],
+            ],*/
         ];
         foreach ($reservations as $reservation) { Reservation::create($reservation); }
 

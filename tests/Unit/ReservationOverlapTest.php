@@ -9,7 +9,6 @@ use App\Models\Reservation;
 use App\Models\Table;
 use App\Models\User;
 use App\Models\OpeningHours;
-use Illuminate\Support\Facades\DB;
 
 class ReservationOverlapTest extends TestCase
 {
@@ -35,7 +34,7 @@ class ReservationOverlapTest extends TestCase
     private function setupOpeningHours()
     {
         //drop existing opening hours
-        DB::table('opening_hours')->delete();
+        OpeningHours::query()->delete();
 
         //create opening hours for all days of the week
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

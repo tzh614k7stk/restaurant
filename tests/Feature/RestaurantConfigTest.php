@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Employee;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\RestaurantConfig;
-use Illuminate\Support\Facades\DB;
 
 class RestaurantConfigTest extends TestCase
 {
@@ -21,7 +21,7 @@ class RestaurantConfigTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
+        Employee::create([
             'user_id' => $this->employee->id,
             'admin' => true
         ]);

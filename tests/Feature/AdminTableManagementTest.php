@@ -6,9 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\Table;
 use App\Models\Reservation;
-use Illuminate\Support\Facades\DB;
 
 class AdminTableManagementTest extends TestCase
 {
@@ -24,9 +24,7 @@ class AdminTableManagementTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
-            'user_id' => $this->employee->id
-        ]);
+        Employee::create(['user_id' => $this->employee->id]);
 
         $this->user = User::factory()->create();
         $this->table = Table::factory()->create([

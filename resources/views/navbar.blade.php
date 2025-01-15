@@ -40,7 +40,7 @@
                     { id: 1, href: '/', text: 'Reservations', color: 'text-zinc-900', },
                     { id: 2, href: '/about', text: 'Information', color: 'text-zinc-900', },
                     @auth
-                        @if(DB::table('employees')->where('user_id', Auth::id())->exists())
+                        @if(auth()->user()->employee())
                             { id: 3, href: '/admin', text: 'Employees', color: 'text-zinc-900', },
                         @endif
                     @endauth

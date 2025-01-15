@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
 
 class AuthenticationTest extends TestCase
 {
@@ -20,9 +20,7 @@ class AuthenticationTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
-            'user_id' => $this->employee->id
-        ]);
+        Employee::create(['user_id' => $this->employee->id]);
     }
 
     public function test_guest_redirected_to_login()

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
 
 class EmployeeManagementTest extends TestCase
 {
@@ -23,14 +23,14 @@ class EmployeeManagementTest extends TestCase
 
         //create admin
         $this->admin = User::factory()->create();
-        DB::table('employees')->insert([
+        Employee::create([
             'user_id' => $this->admin->id,
             'admin' => true
         ]);
 
         //create regular employee
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
+        Employee::create([
             'user_id' => $this->employee->id,
             'admin' => false
         ]);
@@ -72,9 +72,7 @@ class EmployeeManagementTest extends TestCase
 
     public function test_non_admin_cannot_remove_employee()
     {
-        $employee_id = DB::table('employees')
-            ->where('user_id', $this->employee->id)
-            ->value('id');
+        $employee_id = Employee::where('user_id', $this->employee->id)->value('id');
 
         $response = $this->actingAs($this->employee)
             ->postJson('/api/admin/remove_employee', [
@@ -86,9 +84,7 @@ class EmployeeManagementTest extends TestCase
 
     public function test_admin_can_remove_employee()
     {
-        $employee_id = DB::table('employees')
-            ->where('user_id', $this->employee->id)
-            ->value('id');
+        $employee_id = Employee::where('user_id', $this->employee->id)->value('id');
 
         $response = $this->actingAs($this->admin)
             ->postJson('/api/admin/remove_employee', [

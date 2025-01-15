@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
 
 class UserManagementTest extends TestCase
 {
@@ -21,9 +21,7 @@ class UserManagementTest extends TestCase
         $this->seed();
 
         $this->employee = User::factory()->create();
-        DB::table('employees')->insert([
-            'user_id' => $this->employee->id
-        ]);
+        Employee::create(['user_id' => $this->employee->id]);
 
         $this->user = User::factory()->create();
     }

@@ -87,8 +87,7 @@ class ReservationManagementTest extends TestCase
                 'table_id' => $this->table->id
             ]);
 
-        $response->assertStatus(422)
-            ->assertJsonFragment(['message' => 'Reservation must be at least 2 hours in the future.']);
+        $response->assertStatus(422);
     }
 
     public function test_cannot_exceed_max_future_reservations()

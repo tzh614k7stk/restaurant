@@ -7,7 +7,6 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\OpeningHours;
 use App\Models\RestaurantConfig;
-use Illuminate\Support\Facades\DB;
 class PublicApiTest extends TestCase
 {
     use RefreshDatabase;
@@ -28,7 +27,7 @@ class PublicApiTest extends TestCase
         ]);
 
         //set up basic opening hours
-        DB::table('opening_hours')->delete();
+        OpeningHours::query()->delete();
         OpeningHours::create([
             'day' => 'Monday',
             'open' => '09:00',
